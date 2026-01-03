@@ -12,7 +12,7 @@ import {
   Submit,
   UserName,
 } from 'view-ui-plus'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useAuth } from '@/service/useAuth.js'
 import { useTimeStampToDate } from '@/utils/useTimeStampToDate.js'
 import { storeToRefs } from 'pinia'
@@ -20,13 +20,13 @@ import { useUserStore } from '@/stores/userStore.js'
 
 const loginModal = ref(false)
 
-const autoLogin = ref(true)
-
 const lastLoginTime = ref(null)
 
-const { isLogin } = storeToRefs(useUserStore())
+const userStore = useUserStore()
+const { isLogin,user,token } = storeToRefs(userStore)
 
 const { login, loginError, loginLoading, loginData } = useAuth()
+const { profile, profileData, profileError } = useAuth()
 
 const handleSubmit = async (valid, { username, password }) => {
   if (valid) {
@@ -36,7 +36,6 @@ const handleSubmit = async (valid, { username, password }) => {
         title: '登录失败',
         content: '请勿频繁登录',
       })
-      isLoading.value = false
       return
     }
     // 更新最后登录时间
@@ -46,7 +45,7 @@ const handleSubmit = async (valid, { username, password }) => {
       await login(username, password).then(() => {
         // 登录成功
         if (loginData.value.code === 200) {
-          localStorage.setItem('token', loginData.value.data.token)
+          token.value = loginData.value.data.token
 
           Notice.success({
             title: '登录成功',
@@ -68,6 +67,17 @@ const handleSubmit = async (valid, { username, password }) => {
           })
         }
       })
+
+      // 获取用户信息
+      await profile().then(() => {
+        if (profileData.value.code !== 200) {
+          Notice.error({
+            title: '获取用户信息失败',
+            desc: '错误信息：' + profileData.value.message,
+          })
+        }
+        user.value = profileData.value.data
+      })
     } catch (err) {
       if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
         Modal.error({
@@ -88,7 +98,7 @@ const handleSubmit = async (valid, { username, password }) => {
 <template>
   <Space wrap>
     <!-- 显示的登录按钮 -->
-    <Button @click="loginModal = true" v-if="!isLogin">登录</Button>
+    <Button type="primary" @click="loginModal = true" v-if="!isLogin">登录</Button>
 
     <Modal v-model="loginModal" draggable sticky :mask="true" title="登录">
       <div class="login-container">
@@ -96,7 +106,6 @@ const handleSubmit = async (valid, { username, password }) => {
           <UserName name="username" />
           <Password name="password" />
           <div class="auto-login">
-            <Checkbox v-model="autoLogin" size="large">自动登录</Checkbox>
             <a @click="Modal.info({ title: '提示', content: '暂不支持找回密码' })">忘记密码</a>
           </div>
           <Submit :class="{ disabled: loginLoading }" />

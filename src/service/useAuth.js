@@ -23,6 +23,13 @@ export function useAuth() {
     },
   })
 
+  const profileApi = useAxios('/api/auth/profile', {
+    method: 'GET',
+    headers: {
+      Authorization: 'Bearer ' + localStorage.getItem('token'),
+    },
+  })
+
   const register = async (username, password, nickname, email) => {
     return registerApi.execute(null, {
       data: {
@@ -43,6 +50,10 @@ export function useAuth() {
     })
   }
 
+  const profile = async () => {
+    return profileApi.execute(null, {})
+  }
+
   return {
     // 用户信息
     username,
@@ -59,6 +70,11 @@ export function useAuth() {
     loginError: loginApi.error,
     loginLoading: loginApi.loading,
     login,
+    // 获取用户信息相关状态
+    profileData: profileApi.data,
+    profileError: profileApi.error,
+    profileLoading: profileApi.loading,
+    profile,
   }
 }
 

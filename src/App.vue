@@ -2,14 +2,11 @@
 import { Content, Icon, Layout, Menu, MenuItem, Sider } from 'view-ui-plus'
 import { computed, ref } from 'vue'
 import LiliHeader from '@/components/LiliHeader.vue'
-import { useUserStore } from '@/stores/userStore.js'
-import { storeToRefs } from 'pinia'
 
 const isCollapsed = ref(false)
 
 const menuitemClasses = computed(() => ['menu-item', isCollapsed.value ? 'collapsed-menu' : ''])
 
-const { isLogin } = storeToRefs(useUserStore())
 </script>
 
 <template>

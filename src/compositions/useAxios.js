@@ -1,10 +1,19 @@
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import axios from 'axios'
-const baseURL = 'https://lilicould.cn:8888'
+import { useUserStore } from '@/stores/userStore.js'
+
 
 export function useAxios(url, options = {}) {
+  const userStore = useUserStore()
   // 设置baseURL
-  axios.defaults.baseURL = baseURL
+  axios.defaults.baseURL = 'https://lilicould.cn:8888'
+  axios.interceptors.request.use((config) => {
+    const token = userStore.token
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  })
 
   // 响应式数据：存储请求返回的数据
   const data = ref(null)
@@ -26,10 +35,8 @@ export function useAxios(url, options = {}) {
       // 优先使用自定义 URL，否则使用传入的默认 URL
       const requestUrl = customUrl || url
 
-      // 动态获取 token 并设置默认请求头
       const defaultHeaders = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + (localStorage.getItem('token') || ''),
       }
 
       // 合并请求头：优先级 customOptions.headers > options.headers > defaultHeaders

@@ -1,7 +1,10 @@
 <script setup>
-import { computed, handleError } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import LoginModal from '@/components/modals/LoginModal.vue'
+import { storeToRefs } from 'pinia'
+import { useUserStore } from '@/stores/userStore.js'
+import { Avatar, Button, Notice } from 'view-ui-plus'
 
 // 获取当前路由信息
 const route = useRoute()
@@ -11,6 +14,18 @@ const activeMenu = computed(() => {
   return route.name || 'home'
 })
 
+const { isLogin, user, token } = storeToRefs(useUserStore())
+const { clear } = useUserStore()
+
+const logout = () => {
+  clear()
+  Notice.success(
+    {
+      title: '退出成功',
+      desc: '已退出登录',
+    }
+  )
+}
 </script>
 
 <template>
@@ -37,6 +52,8 @@ const activeMenu = computed(() => {
       <div class="user-actions">
         <!--登录模态框，附带登录按钮 -->
         <LoginModal />
+        <Button v-if="isLogin" type="error" @click="logout">退出</Button>
+        <Avatar v-if="isLogin" style="color: #f56a00; background-color: #fde3cf">{{user.nickname?.slice(0, 1) }}</Avatar>
       </div>
     </div>
   </div>
@@ -117,5 +134,4 @@ const activeMenu = computed(() => {
   display: flex;
   gap: 10px;
 }
-
 </style>
