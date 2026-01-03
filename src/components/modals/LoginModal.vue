@@ -13,7 +13,7 @@ import {
   UserName,
 } from 'view-ui-plus'
 import { computed, ref, watch } from 'vue'
-import { useLogin } from '@/service/useLogin.js'
+import { useAuth } from '@/service/useAuth.js'
 import { useTimeStampToDate } from '@/utils/useTimeStampToDate.js'
 import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/stores/userStore.js'
@@ -26,39 +26,36 @@ const lastLoginTime = ref(null)
 
 const { isLogin } = storeToRefs(useUserStore())
 
-const isLoading = ref(false)
+const { login, loginError, loginLoading, loginData } = useAuth()
 
 const handleSubmit = async (valid, { username, password }) => {
   if (valid) {
-    isLoading.value = true
     // 节流,如果登录间隔小于5秒，则返回
     if (lastLoginTime.value && new Date().getTime() - lastLoginTime.value < 5000) {
       Modal.error({
         title: '登录失败',
         content: '请勿频繁登录',
       })
+      isLoading.value = false
       return
     }
     // 更新最后登录时间
     lastLoginTime.value = new Date().getTime()
 
-    const { data, response, execute } = useLogin(username, password)
-
-    await execute().then(() => {
-      // 登录成功
-      if (response.value.status === 200) {
+    try {
+      await login(username, password).then(() => {
         // 登录成功
-        if (data.value.code === 200) {
-          localStorage.setItem('token', data.value.data.token)
+        if (loginData.value.code === 200) {
+          localStorage.setItem('token', loginData.value.data.token)
 
           Notice.success({
             title: '登录成功',
             desc:
               '<div>登录用户：' +
-              data.value.data.nickname +
+              loginData.value.data.nickname +
               '</div>' +
               '<div>登录时间：' +
-              useTimeStampToDate(data.value.timestamp) +
+              useTimeStampToDate(loginData.value.timestamp) +
               '</div>',
             duration: 3,
           })
@@ -67,17 +64,23 @@ const handleSubmit = async (valid, { username, password }) => {
         } else {
           Notice.error({
             title: '登录失败',
-            desc: '错误信息：' + data.value.message,
+            desc: '错误信息：' + loginData.value.message,
           })
         }
-      } else {
-        Notice.error({
+      })
+    } catch (err) {
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        Modal.error({
           title: '登录失败',
-          desc: '错误信息：' + response.value.statusText,
+          content: '请求超时，请检查网络',
+        })
+      } else {
+        Modal.error({
+          title: '登录失败',
+          content: loginError.value,
         })
       }
-    })
-    isLoading.value = false
+    }
   }
 }
 </script>
@@ -96,10 +99,10 @@ const handleSubmit = async (valid, { username, password }) => {
             <Checkbox v-model="autoLogin" size="large">自动登录</Checkbox>
             <a @click="Modal.info({ title: '提示', content: '暂不支持找回密码' })">忘记密码</a>
           </div>
-          <Submit :class="{ disabled: isLoading }" />
+          <Submit :class="{ disabled: loginLoading }" />
         </Login>
         <!-- 登录加载动画 -->
-        <Spin fix v-if="isLoading">
+        <Spin fix v-if="loginLoading">
           <Icon type="ios-loading" size="18" class="spin-icon-load"></Icon>
           <div>正在登录...</div>
         </Spin>

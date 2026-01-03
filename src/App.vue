@@ -1,5 +1,5 @@
 <script setup>
-import { Content, Header, Icon, Layout, Menu, MenuItem, Sider } from 'view-ui-plus'
+import { Content, Icon, Layout, Menu, MenuItem, Sider } from 'view-ui-plus'
 import { computed, ref } from 'vue'
 import LiliHeader from '@/components/LiliHeader.vue'
 import { useUserStore } from '@/stores/userStore.js'

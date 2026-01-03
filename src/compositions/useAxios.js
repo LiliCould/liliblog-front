@@ -45,6 +45,7 @@ export function useAxios(url, options = {}) {
         ...options,
         ...customOptions,
         headers: mergedHeaders,
+        timeout: 15000, // 默认超时时间
       }
 
       // 发送 HTTP 请求并等待响应

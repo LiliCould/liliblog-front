@@ -61,12 +61,12 @@ import { Content, Layout } from 'view-ui-plus'
               </div>
               <div class="footer-section">
                 <h4>联系方式</h4>
-                <p>邮箱：contact@liliblog.com</p>
-                <p>微信：liliblog</p>
+                <p>邮箱：lilicould@qq.com</p>
+                <p>微信：Lili_Could</p>
               </div>
             </div>
             <div class="copyright">
-              <p>&copy; 2026 LiliBlog. 版权所有。</p>
+              <p>&copy; {{ new Date().getFullYear }}} LiliBlog. 版权所有。</p>
             </div>
           </div>
         </div>
@@ -89,7 +89,7 @@ import { Content, Layout } from 'view-ui-plus'
 }
 
 .banner {
-  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  background: #5cadff;
   color: white;
   padding: 80px 20px;
   text-align: center;
