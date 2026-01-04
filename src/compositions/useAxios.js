@@ -6,7 +6,15 @@ import { useUserStore } from '@/stores/userStore.js'
 export function useAxios(url, options = {}) {
   const userStore = useUserStore()
   // 设置baseURL
-  axios.defaults.baseURL = 'https://lilicould.cn:8888'
+  // 根据环境动态设置 baseURL
+  if (import.meta.env.DEV) {
+    // 开发环境使用相对路径，让 Vite 代理处理
+    axios.defaults.baseURL = ''
+  } else {
+    // 生产环境使用实际服务器地址
+    axios.defaults.baseURL = 'https://lilicould.cn:8888'
+  }
+
   axios.interceptors.request.use((config) => {
     const token = userStore.token
     if (token) {

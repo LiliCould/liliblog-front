@@ -31,7 +31,7 @@ const menuitemClasses = computed(() => ['menu-item', isCollapsed.value ? 'collap
 <!--      </Sider>-->
       <Layout>
         <lili-header />
-        <Content :style="{ margin: '20px', background: '#fff', minHeight: '220px' }">
+        <Content :style="{ margin: '20px', background: '#fff', minHeight: '600px' }">
           <router-view></router-view>
         </Content>
       </Layout>

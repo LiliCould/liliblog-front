@@ -15,14 +15,9 @@ const router = createRouter({
       props: true,
     },
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('@/pages/AboutUs.vue'),
-    },
-    {
-      path: '/contact',
-      name: 'contact',
-      component: () => import('@/pages/ContactUs.vue'),
+      path: '/article/add',
+      name: 'add-article',
+      component: () => import('@/pages/AddArticlePage.vue'),
     },
     {
       path: '/*',

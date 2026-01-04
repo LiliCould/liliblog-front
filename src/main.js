@@ -9,6 +9,9 @@ import router from './router'
 import ViewUIPlus from 'view-ui-plus'
 import 'view-ui-plus/dist/styles/viewuiplus.css'
 
+// 富文本编辑器样式
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
+
 const app = createApp(App)
 
 app.use(createPinia().use(createPersistedState()))
@@ -22,5 +25,4 @@ app.use(ViewUIPlus, {
     arrowSize: 20,
   },
 })
-
 app.mount('#app')
