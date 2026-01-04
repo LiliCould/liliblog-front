@@ -1,5 +1,5 @@
 <script setup>
-import { Card, Grid, GridItem, Modal } from 'view-ui-plus'
+import { Card } from 'view-ui-plus'
 import { useArticleStore } from '@/stores/articleStore.js'
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -8,13 +8,6 @@ const articleStore = useArticleStore()
 
 const { articles } = storeToRefs(articleStore)
 const { articleLength, getArticles } = articleStore
-
-const showDetail = () => {
-  Modal.info({
-    title: '文章详情',
-    content: '文章详情',
-  })
-}
 
 onMounted(async () => {
   await articleStore.getArticles()
@@ -26,7 +19,7 @@ onMounted(async () => {
     <Card
       v-for="article in articles"
       :key="article.id"
-      @click="showDetail"
+      :to="`/article/${article.id}`"
       class="ivu-article-card"
     >
       <template #title>
@@ -50,7 +43,6 @@ onMounted(async () => {
 
 <style scoped>
 .ivu-article-card {
-  min-width: 400px;
   margin: 10px auto;
   cursor: pointer;
 }

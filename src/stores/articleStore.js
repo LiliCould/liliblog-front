@@ -15,11 +15,6 @@ export const useArticleStore = defineStore('articleStore', () => {
     try {
       await articleApi.execute().then(() =>{
         if (articleApi.data.value.code === 200) {
-          Notice.success({
-            title: '成功',
-            desc: articleApi.data.value.message,
-            duration: 1,
-          })
           articles.value = articleApi.data.value.data
         } else {
           Notice.error({

@@ -41,12 +41,6 @@ const logout = () => {
           <li :class="{ active: activeMenu === 'home' }">
             <router-link to="/">首页</router-link>
           </li>
-          <li :class="{ active: activeMenu === 'about' }">
-            <router-link to="/about">关于</router-link>
-          </li>
-          <li :class="{ active: activeMenu === 'contact' }">
-            <router-link to="/contact">联系</router-link>
-          </li>
         </ul>
       </div>
       <div class="user-actions">

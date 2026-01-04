@@ -9,6 +9,12 @@ const router = createRouter({
       component: () => import('@/pages/HomePage.vue'),
     },
     {
+      path: '/article/:id',
+      name: 'article',
+      component: () => import('@/pages/ArticlePage.vue'),
+      props: true,
+    },
+    {
       path: '/about',
       name: 'about',
       component: () => import('@/pages/AboutUs.vue'),
@@ -20,7 +26,6 @@ const router = createRouter({
     },
     {
       path: '/*',
-      name: 'login',
       redirect: '/',
     },
   ],
