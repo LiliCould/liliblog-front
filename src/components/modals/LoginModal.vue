@@ -93,6 +93,10 @@ const handleSubmit = async (valid, { username, password }) => {
     }
   }
 }
+
+const loginWidth = computed(() => {
+  return window.innerWidth < 768 ? '90' : '450px'
+})
 </script>
 
 <template>
@@ -100,7 +104,7 @@ const handleSubmit = async (valid, { username, password }) => {
     <!-- 显示的登录按钮 -->
     <Button type="primary" @click="loginModal = true" v-if="!isLogin">登录</Button>
 
-    <Modal v-model="loginModal" draggable sticky :mask="true" title="登录">
+    <Modal v-model="loginModal" draggable sticky :mask="true" title="登录" :width="loginWidth">
       <div class="login-container">
         <Login @on-submit="handleSubmit" enter>
           <UserName name="username" />
@@ -125,7 +129,7 @@ const handleSubmit = async (valid, { username, password }) => {
 
 <style>
 .login-container {
-  width: 400px;
+  width: 100%;
   margin: 0 auto !important;
 }
 .auto-login {

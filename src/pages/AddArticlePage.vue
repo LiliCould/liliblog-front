@@ -42,6 +42,10 @@ const handleSubmit = () => {
   formData.value.content = formData.value.contentHtml.replace(/<[^>]+>/g, '')
   addArticle(formData.value)
 }
+
+defineOptions({
+  name: 'AddArticlePage'
+})
 </script>
 
 <template>
