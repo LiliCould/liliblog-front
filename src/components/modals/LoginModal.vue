@@ -140,7 +140,7 @@ const loginWidth = computed(() => {
   float: right;
 }
 
-// 加载动画
+/* 加载动画 */
 .spin-col .circular {
   width: 25px;
   height: 25px;
