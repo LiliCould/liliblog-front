@@ -1,43 +1,33 @@
 <script setup>
-import { Content, Icon, Layout, Menu, MenuItem, Sider } from 'view-ui-plus'
-import { computed, ref } from 'vue'
+import { Header, Card, Footer, Layout, Content } from 'view-ui-plus'
 import LiliHeader from '@/components/LiliHeader.vue'
-
-const isCollapsed = ref(false)
-
-const menuitemClasses = computed(() => ['menu-item', isCollapsed.value ? 'collapsed-menu' : ''])
 </script>
 
 <template>
   <div class="layout">
     <Layout>
-      <!--      <Sider breakpoint="md" collapsible :collapsed-width="78" v-model="isCollapsed">-->
-      <!--        <Menu active-name="1-2" theme="dark" width="auto" :class="menuitemClasses">-->
-      <!--          <MenuItem name="1-1">-->
-      <!--            <Icon type="ios-navigate"></Icon>-->
-      <!--            <span>Option 1</span>-->
-      <!--          </MenuItem>-->
-      <!--          <MenuItem name="1-2">-->
-      <!--            <Icon type="ios-search"></Icon>-->
-      <!--            <span>Option 2</span>-->
-      <!--          </MenuItem>-->
-      <!--          <MenuItem name="1-3">-->
-      <!--            <Icon type="ios-settings"></Icon>-->
-      <!--            <span>Option 3</span>-->
-      <!--          </MenuItem>-->
-      <!--        </Menu>-->
-      <!--        <template #trigger></template>-->
-      <!--      </Sider>-->
-      <Layout>
-        <lili-header />
-        <Content :style="{ margin: '20px', background: '#fff', minHeight: '600px' }">
+      <Header>
+        <LiliHeader />
+      </Header>
+
+      <Content :style="{ padding: '0 50px' }">
+        <Card>
           <router-view v-slot="{ Component }">
             <keep-alive :include="['AddArticlePage']">
               <component :is="Component" />
             </keep-alive>
           </router-view>
-        </Content>
-      </Layout>
+        </Card>
+      </Content>
+
+      <Footer class="layout-footer-center">
+        <p>Copyright &copy; 2025-{{ new Date().getFullYear() }} LiliCould</p>
+        <p>
+          Powered by
+          <a href="https://github.com/LiliCould" target="_blank">LiliCould</a>
+        </p>
+        <p><a href="https://beian.miit.gov.cn" target="_blank">赣ICP备2025078204号-1</a></p>
+      </Footer>
     </Layout>
   </div>
 </template>
@@ -50,40 +40,22 @@ const menuitemClasses = computed(() => ['menu-item', isCollapsed.value ? 'collap
   border-radius: 4px;
   overflow: hidden;
 }
-.layout-header-bar {
-  background: #fff;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+
+/* 导航栏底色 */
+.layout .ivu-layout-header {
+  background: #f8f8f9;
 }
-.menu-item span {
-  display: inline-block;
-  overflow: hidden;
-  width: 69px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: bottom;
-  transition: width 0.2s ease 0.2s;
+
+.layout-footer-center {
+  text-align: center;
 }
-.menu-item i {
-  transform: translateX(0px);
-  transition:
-    font-size 0.2s ease,
-    transform 0.2s ease;
-  vertical-align: middle;
-  font-size: 16px;
-}
-.collapsed-menu span {
-  width: 0px;
-  transition: width 0.2s ease;
-}
-.collapsed-menu i {
-  transform: translateX(5px);
-  transition:
-    font-size 0.2s ease 0.2s,
-    transform 0.2s ease 0.2s;
-  vertical-align: middle;
-  font-size: 22px;
-}
-.dev-run-preview .dev-run-preview-edit {
-  display: none;
+
+.layout-footer-center a {
+  color: #333;
+  text-decoration: none;
+  transition: color 0.3s;
+  &:hover {
+    color: #666;
+  }
 }
 </style>

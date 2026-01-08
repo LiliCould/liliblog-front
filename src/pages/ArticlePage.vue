@@ -17,7 +17,7 @@ onMounted(async () => {
 })
 
 const article = computed(() => {
-  return articles.value.find(article => article.id === parseInt(id))
+  return articles.value.find((article) => article.id === parseInt(id))
 })
 </script>
 
@@ -26,15 +26,6 @@ const article = computed(() => {
     <Card v-if="article" class="article-card">
       <template #title>
         <h1 class="article-title">{{ article.title }}</h1>
-      </template>
-
-      <template #extra>
-        <div class="article-meta">
-          <Tag v-if="article.isTop" color="red">置顶</Tag>
-          <Tag v-if="article.isRecommend" color="blue">推荐</Tag>
-          <Tag color="green">{{ article.categoryName || '未分类' }}</Tag>
-          <Tag v-for="tag in article.tags" :key="tag.id" color="default">{{ tag.name }}</Tag>
-        </div>
       </template>
 
       <div class="article-header">
@@ -59,6 +50,15 @@ const article = computed(() => {
             <Icon type="ios-chatbubbles" />
             <span>{{ article.commentCount }} 评论</span>
           </div>
+        </div>
+      </div>
+
+      <div class="article-tags">
+        <div class="article-meta">
+          <Tag v-if="article.isTop" color="red">置顶</Tag>
+          <Tag v-if="article.isRecommend" color="blue">推荐</Tag>
+          <Tag color="green">{{ article.categoryName || '未分类' }}</Tag>
+          <Tag v-for="tag in article.tags" :key="tag.id" color="default">{{ tag.name }}</Tag>
         </div>
       </div>
 
