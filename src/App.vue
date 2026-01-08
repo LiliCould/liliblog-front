@@ -6,21 +6,19 @@ import LiliHeader from '@/components/LiliHeader.vue'
 <template>
   <div class="layout">
     <Layout>
-      <Header>
+      <Header :style="{ padding: '5px' }">
         <LiliHeader />
       </Header>
 
-      <Content :style="{ padding: '0 50px' }">
-        <Card>
-          <router-view v-slot="{ Component }">
-            <keep-alive :include="['AddArticlePage']">
-              <component :is="Component" />
-            </keep-alive>
-          </router-view>
-        </Card>
+      <Content :style="{ padding: '5px' }">
+        <router-view v-slot="{ Component }">
+          <keep-alive :include="['AddArticlePage']">
+            <component :is="Component" />
+          </keep-alive>
+        </router-view>
       </Content>
 
-      <Footer class="layout-footer-center">
+      <Footer :style="{ padding: '5px' }">
         <p>Copyright &copy; 2025-{{ new Date().getFullYear() }} LiliCould</p>
         <p>
           Powered by
@@ -42,15 +40,15 @@ import LiliHeader from '@/components/LiliHeader.vue'
 }
 
 /* 导航栏底色 */
-.layout .ivu-layout-header {
+.ivu-layout-header {
   background: #f8f8f9;
 }
 
-.layout-footer-center {
+.ivu-layout-footer {
   text-align: center;
 }
 
-.layout-footer-center a {
+.ivu-layout-footer a {
   color: #333;
   text-decoration: none;
   transition: color 0.3s;

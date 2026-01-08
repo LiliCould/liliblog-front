@@ -18,9 +18,7 @@ const { isLogin, user, token } = storeToRefs(useUserStore())
 const { clear } = useUserStore()
 
 // 响应式布局相关
-const isMobile = computed(()=>{
-  return window.innerWidth < 769
-})
+const isMobile = ref(false)
 const showMobileMenu = ref(false)
 
 // 检测屏幕大小
