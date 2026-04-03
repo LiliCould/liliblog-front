@@ -48,7 +48,10 @@ async function handleUploadImg(files: File[], callback: (urls: string[]) => void
   for (const file of files) {
     try {
       const res = await uploadFile(file, 'article') as unknown as ApiResponse<string>
-      urls.push(res.data)
+      const url = res.message?.trim() || res.data
+      if (url) {
+        urls.push(url)
+      }
     } catch {
       // skip failed uploads
     }

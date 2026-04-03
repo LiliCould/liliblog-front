@@ -8,6 +8,7 @@ export interface RegisterDTO {
     email: string
     password: string
     nickname: string
+    captcha: string
 }
 
 export interface PasswordChangeDTO {

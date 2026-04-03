@@ -54,8 +54,26 @@
             placeholder="确认密码"
             :prefix-icon="Lock"
             show-password
-            @keyup.enter="handleRegister"
           />
+        </el-form-item>
+
+        <el-form-item prop="captcha">
+          <el-input
+            v-model="form.captcha"
+            placeholder="验证码"
+            :prefix-icon="Postcard"
+            @keyup.enter="handleRegister"
+          >
+            <template #append>
+              <el-button
+                :loading="captchaLoading"
+                :disabled="countdown > 0"
+                @click="handleGetCaptcha"
+              >
+                {{ countdown > 0 ? `${countdown}s后重新获取` : '获取验证码' }}
+              </el-button>
+            </template>
+          </el-input>
         </el-form-item>
 
         <el-form-item>
@@ -79,17 +97,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Lock, Message, UserFilled } from '@element-plus/icons-vue'
+import { User, Lock, Message, UserFilled, Postcard } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormItemRule } from 'element-plus'
-import { register } from '@/api/auth'
+import { register, getCaptcha } from '@/api/auth'
 import { usernameRules, passwordRules, emailRules, nicknameRules } from '@/utils/validate'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const captchaLoading = ref(false)
+const countdown = ref(0)
+let countdownTimer: number | null = null
 
 const form = reactive({
   username: '',
@@ -97,6 +118,7 @@ const form = reactive({
   nickname: '',
   password: '',
   confirmPassword: '',
+  captcha: '',
 })
 
 const confirmPasswordRules: FormItemRule[] = [
@@ -113,12 +135,46 @@ const confirmPasswordRules: FormItemRule[] = [
   },
 ]
 
+const captchaRules: FormItemRule[] = [
+  { required: true, message: '请输入验证码', trigger: 'blur' },
+]
+
 const rules = {
   username: usernameRules,
   email: emailRules,
   nickname: nicknameRules,
   password: passwordRules,
   confirmPassword: confirmPasswordRules,
+  captcha: captchaRules,
+}
+
+function startCountdown() {
+  countdown.value = 60
+  countdownTimer = window.setInterval(() => {
+    if (countdown.value > 0) {
+      countdown.value--
+    } else {
+      clearInterval(countdownTimer!)
+    }
+  }, 1000)
+}
+
+async function handleGetCaptcha() {
+  if (!form.email) {
+    ElMessage.error('请输入邮箱')
+    return
+  }
+  
+  captchaLoading.value = true
+  try {
+    await getCaptcha(form.email)
+    ElMessage.success('验证码已发送到您的邮箱')
+    startCountdown()
+  } catch {
+    // error handled by interceptor
+  } finally {
+    captchaLoading.value = false
+  }
 }
 
 async function handleRegister() {
@@ -132,6 +188,7 @@ async function handleRegister() {
       email: form.email,
       password: form.password,
       nickname: form.nickname,
+      captcha: form.captcha,
     })
     ElMessage.success('注册成功，请登录')
     router.push('/login')
@@ -141,6 +198,12 @@ async function handleRegister() {
     loading.value = false
   }
 }
+
+onUnmounted(() => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+  }
+})
 </script>
 
 <style scoped>

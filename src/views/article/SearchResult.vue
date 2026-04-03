@@ -81,6 +81,9 @@ watch(() => route.query.keyword, (val) => {
 .search-page {
   padding-top: 32px;
   padding-bottom: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .search-header {
@@ -100,9 +103,11 @@ watch(() => route.query.keyword, (val) => {
 }
 
 .search-info {
-  margin-bottom: 20px;
+  text-align: center;
+  margin: 0 auto;
   font-size: 14px;
   color: var(--color-warning);
+  max-width: 800px;
 }
 
 .search-info strong {

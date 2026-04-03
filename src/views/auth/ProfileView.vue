@@ -8,6 +8,17 @@
             <el-avatar :size="80" :src="profile.avatar || undefined">
               {{ profile.nickname?.charAt(0) || 'U' }}
             </el-avatar>
+            <el-upload
+              :auto-upload="true"
+              :show-file-list="false"
+              :http-request="handleAvatarUpload"
+              accept="image/*"
+              class="avatar-upload"
+            >
+              <el-button size="small" type="primary" circle>
+                <el-icon><Camera /></el-icon>
+              </el-button>
+            </el-upload>
           </div>
           <div class="info-list">
             <div class="info-item">
@@ -16,7 +27,26 @@
             </div>
             <div class="info-item">
               <span class="info-label">昵称</span>
-              <span class="info-value">{{ profile.nickname }}</span>
+              <div class="nickname-edit">
+                <el-input
+                  v-if="editingNickname"
+                  v-model="editNickname"
+                  placeholder="请输入昵称"
+                  size="small"
+                  @keyup.enter="handleSaveNickname"
+                  @blur="handleSaveNickname"
+                  ref="nicknameInputRef"
+                />
+                <span v-else class="info-value" @click="startEditNickname">{{ profile.nickname }}</span>
+                <el-button
+                  v-if="!editingNickname"
+                  size="small"
+                  type="primary"
+                  @click="startEditNickname"
+                >
+                  编辑
+                </el-button>
+              </div>
             </div>
             <div class="info-item">
               <span class="info-label">邮箱</span>
@@ -82,20 +112,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import type { FormInstance, FormItemRule } from 'element-plus'
+import { Camera } from '@element-plus/icons-vue'
+import type { FormInstance, FormItemRule, UploadRequestOptions } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import type { UserVO } from '@/types/auth.d'
 import { formatDateTime } from '@/utils/format'
 import { passwordRules } from '@/utils/validate'
+import { uploadFile } from '@/api/file'
+import { updateUserInfo } from '@/api/auth'
+import type { ApiResponse } from '@/types/api.d'
 
 const router = useRouter()
 const userStore = useUserStore()
 const profile = ref<UserVO | null>(null)
 const passwordFormRef = ref<FormInstance>()
+const nicknameInputRef = ref<InstanceType<typeof import('element-plus')['ElInput']>>()
 const changingPassword = ref(false)
+const updatingProfile = ref(false)
+const editingNickname = ref(false)
+const editNickname = ref('')
 
 const passwordForm = reactive({
   oldPassword: '',
@@ -133,6 +171,75 @@ onMounted(async () => {
     // handled by interceptor
   }
 })
+
+async function handleAvatarUpload(options: UploadRequestOptions) {
+  try {
+    const res = await uploadFile(options.file as File, 'avatar') as unknown as ApiResponse<string>
+    const avatarUrl = res.message?.trim() || res.data
+    if (avatarUrl) {
+      // 更新本地用户信息
+      if (profile.value) {
+        profile.value.avatar = avatarUrl
+      }
+      // 同时更新 store 中的用户信息
+      userStore.updateAvatar(avatarUrl)
+      
+      // 调用后端更新接口
+      await updateUserInfo({
+        avatar: avatarUrl
+      })
+      
+      ElMessage.success('头像上传成功')
+    }
+  } catch {
+    ElMessage.error('头像上传失败')
+  }
+}
+
+function startEditNickname() {
+  if (profile.value) {
+    editNickname.value = profile.value.nickname
+    editingNickname.value = true
+    nextTick(() => {
+      nicknameInputRef.value?.focus()
+    })
+  }
+}
+
+async function handleSaveNickname() {
+  if (!editNickname.value.trim()) {
+    ElMessage.error('昵称不能为空')
+    return
+  }
+  
+  if (editNickname.value.length < 2 || editNickname.value.length > 20) {
+    ElMessage.error('昵称长度在 2-20 个字符之间')
+    return
+  }
+  
+  updatingProfile.value = true
+  try {
+    await updateUserInfo({
+      nickname: editNickname.value
+    })
+    
+    // 更新本地缓存
+    userStore.updateNickname(editNickname.value)
+    
+    // 重新获取用户信息
+    const data = await userStore.fetchProfile()
+    if (data) {
+      profile.value = data
+    }
+    
+    editingNickname.value = false
+    ElMessage.success('昵称更新成功')
+  } catch {
+    ElMessage.error('昵称更新失败')
+  } finally {
+    updatingProfile.value = false
+  }
+}
 
 async function handleChangePassword() {
   if (!passwordFormRef.value) return
@@ -197,6 +304,7 @@ async function handleChangePassword() {
   display: flex;
   padding: 10px 0;
   border-bottom: 1px solid var(--color-border);
+  align-items: center;
 }
 
 .info-item:last-child {
@@ -213,16 +321,64 @@ async function handleChangePassword() {
 .info-value {
   font-size: 14px;
   color: var(--color-title);
+  flex: 1;
+  cursor: pointer;
+}
+
+.nickname-edit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nickname-edit .el-input {
+  flex: 1;
+  max-width: 200px;
 }
 
 .loading-wrapper {
   padding: 20px 0;
 }
 
+.info-avatar {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.avatar-upload {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  transform: translate(25%, 25%);
+}
+
+.avatar-upload .el-button {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 @media (max-width: 640px) {
   .user-info {
     flex-direction: column;
     align-items: center;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .info-label {
+    width: 100%;
+  }
+  
+  .nickname-edit {
+    width: 100%;
+  }
+  
+  .nickname-edit .el-input {
+    max-width: none;
   }
 }
 </style>

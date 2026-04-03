@@ -76,7 +76,12 @@
 
           <div class="setting-item">
             <label class="setting-label">封面图片</label>
-            <el-input v-model="form.coverImage" placeholder="输入封面图片URL" />
+            <div v-if="form.coverImage" class="cover-preview">
+              <img :src="form.coverImage" :alt="form.title" class="cover-image" />
+              <el-button size="small" type="danger" @click="form.coverImage = ''">
+                移除
+              </el-button>
+            </div>
             <el-upload
               :auto-upload="true"
               :show-file-list="false"
@@ -84,7 +89,9 @@
               accept="image/*"
               style="margin-top: 8px;"
             >
-              <el-button size="small">上传封面</el-button>
+              <el-button size="small" type="primary">
+                {{ form.coverImage ? '更换封面' : '上传封面' }}
+              </el-button>
             </el-upload>
           </div>
 
@@ -148,7 +155,7 @@ function handleHtmlChanged(html: string) {
 async function handleCoverUpload(options: UploadRequestOptions) {
   try {
     const res = await uploadFile(options.file as File, 'cover') as unknown as ApiResponse<string>
-    form.coverImage = res.data
+    form.coverImage = res.message?.trim() || res.data
     ElMessage.success('封面上传成功')
   } catch {
     ElMessage.error('封面上传失败')
@@ -294,6 +301,24 @@ onMounted(() => {
   flex: 1;
 }
 
+.cover-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.cover-image {
+  width: 120px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
 @media (max-width: 1024px) {
   .editor-layout {
     flex-direction: column;
@@ -305,6 +330,11 @@ onMounted(() => {
 
   .sidebar-card {
     position: static;
+  }
+
+  .cover-image {
+    width: 100px;
+    height: 60px;
   }
 }
 </style>

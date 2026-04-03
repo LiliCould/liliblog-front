@@ -49,8 +49,7 @@ export const useUserStore = defineStore('user', () => {
     }
 
     async function fetchProfile() {
-        if (!username.value) return
-        const res = await getProfileApi(username.value) as unknown as ApiResponse<UserVO>
+        const res = await getProfileApi() as unknown as ApiResponse<UserVO>
         profile.value = res.data
         return res.data
     }
@@ -58,6 +57,26 @@ export const useUserStore = defineStore('user', () => {
     async function changePassword(data: PasswordChangeDTO) {
         if (!username.value) return
         await changePasswordApi(username.value, data)
+    }
+
+    function updateAvatar(avatarUrl: string) {
+        if (userInfo.value) {
+            userInfo.value.avatar = avatarUrl
+            setUserInfo(userInfo.value)
+        }
+        if (profile.value) {
+            profile.value.avatar = avatarUrl
+        }
+    }
+
+    function updateNickname(newNickname: string) {
+        if (userInfo.value) {
+            userInfo.value.nickname = newNickname
+            setUserInfo(userInfo.value)
+        }
+        if (profile.value) {
+            profile.value.nickname = newNickname
+        }
     }
 
     return {
@@ -73,5 +92,7 @@ export const useUserStore = defineStore('user', () => {
         logout,
         fetchProfile,
         changePassword,
+        updateAvatar,
+        updateNickname,
     }
 })
