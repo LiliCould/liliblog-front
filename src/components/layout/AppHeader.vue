@@ -7,6 +7,12 @@
 
       <nav class="desktop-nav">
         <router-link to="/" class="nav-link" active-class="active">首页</router-link>
+        <router-link to="/about" class="nav-link" active-class="active">关于我</router-link>
+        <router-link to="/chat" class="nav-link chat-trigger">
+          <el-icon><ChatLineSquare /></el-icon>
+          <span>聊天室</span>
+          <span v-if="chatStore.unreadCount > 0" class="unread-badge">{{ chatStore.unreadCount }}</span>
+        </router-link>
         <div class="search-trigger" @click="goSearch">
           <el-icon><Search /></el-icon>
           <span>搜索文章</span>
@@ -47,14 +53,17 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, ArrowDown, Menu } from '@element-plus/icons-vue'
+import { Search, ArrowDown, Menu, ChatLineSquare } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
+import { useChatStore } from '@/stores/chat'
 
 const router = useRouter()
 const userStore = useUserStore()
 const appStore = useAppStore()
+const chatStore = useChatStore()
 
 function goSearch() {
   router.push('/search')
@@ -76,6 +85,10 @@ function handleCommand(command: string) {
       break
   }
 }
+
+onMounted(() => {
+  chatStore.initialize()
+})
 </script>
 
 <style scoped>
@@ -134,6 +147,28 @@ function handleCommand(command: string) {
 .nav-link:hover {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
+}
+
+.chat-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  position: relative;
+}
+
+.unread-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  min-width: 16px;
+  text-align: center;
 }
 
 .search-trigger {

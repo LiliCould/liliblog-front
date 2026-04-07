@@ -35,7 +35,6 @@
           <el-form-item label="正文" prop="content">
             <MarkdownEditor
               v-model="form.content"
-              @html-changed="handleHtmlChanged"
             />
           </el-form-item>
         </el-form>
@@ -214,7 +213,6 @@ const form = reactive({
   slug: '',
   summary: '',
   content: '',
-  contentHtml: '',
   coverImage: '',
   categoryId: undefined as number | undefined,
   tagIds: [] as number[],
@@ -256,10 +254,6 @@ function toggleTag(tagId: number) {
   }
 }
 
-function handleHtmlChanged(html: string) {
-  form.contentHtml = html
-}
-
 async function handleCoverUpload(options: UploadRequestOptions) {
   try {
     const res = await uploadFile(options.file as File, 'cover') as unknown as ApiResponse<string>
@@ -287,7 +281,6 @@ async function handleSave(status: string) {
       slug: form.slug,
       summary: form.summary,
       content: form.content,
-      contentHtml: form.contentHtml,
       coverImage: form.coverImage || undefined,
       status,
       categoryId: form.categoryId || 0,
@@ -320,7 +313,6 @@ async function loadArticleForEdit() {
     form.slug = article.slug
     form.summary = article.summary
     form.content = article.content
-    form.contentHtml = article.contentHtml
     form.coverImage = article.coverImage
     form.categoryId = article.categoryId || undefined
     form.tagIds = article.tags?.map(t => t.id) || []

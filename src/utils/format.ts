@@ -24,6 +24,24 @@ export function formatRelativeTime(dateStr: string): string {
     return formatDate(dateStr)
 }
 
+export function formatMessageTime(dateStr?: string): string {
+    if (!dateStr) return ''
+    const now = dayjs()
+    const target = dayjs(dateStr)
+    const isToday = now.isSame(target, 'day')
+    const isYesterday = now.subtract(1, 'day').isSame(target, 'day')
+
+    if (isToday) {
+        return target.format('HH:mm')
+    } else if (isYesterday) {
+        return `昨天 ${target.format('HH:mm')}`
+    } else if (now.isSame(target, 'year')) {
+        return target.format('MM-DD HH:mm')
+    } else {
+        return target.format('YYYY-MM-DD HH:mm')
+    }
+}
+
 export function formatNumber(num: number): string {
     if (num >= 10000) return `${(num / 10000).toFixed(1)}w`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}k`

@@ -30,6 +30,14 @@
             <el-icon><HomeFilled /></el-icon>
             <span>首页</span>
           </a>
+          <a class="mobile-link" @click="navigate('/about')">
+            <el-icon><UserFilled /></el-icon>
+            <span>关于我</span>
+          </a>
+          <a class="mobile-link" @click="navigate('/chat')">
+            <el-icon><ChatLineSquare /></el-icon>
+            <span>聊天室</span>
+          </a>
           <a class="mobile-link" @click="navigate('/search')">
             <el-icon><Search /></el-icon>
             <span>搜索</span>
@@ -73,14 +81,17 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Close, HomeFilled, Search, EditPen, Document, User, UserFilled, SwitchButton } from '@element-plus/icons-vue'
+import { Close, HomeFilled, Search, EditPen, Document, User, UserFilled, SwitchButton, ChatLineSquare } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
+import { useChatStore } from '@/stores/chat'
 
 const router = useRouter()
 const userStore = useUserStore()
 const appStore = useAppStore()
+const chatStore = useChatStore()
 
 function navigate(path: string) {
   appStore.closeMobileNav()
@@ -91,6 +102,10 @@ function handleLogout() {
   appStore.closeMobileNav()
   userStore.logout()
 }
+
+onMounted(() => {
+  chatStore.initialize()
+})
 </script>
 
 <style scoped>

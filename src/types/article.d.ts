@@ -6,7 +6,6 @@ export interface Article {
     slug: string
     summary: string
     content: string
-    contentHtml: string
     coverImage: string
     status: string
     viewCount: number
@@ -29,7 +28,6 @@ export interface ArticleCreateDTO {
     slug: string
     summary: string
     content: string
-    contentHtml: string
     coverImage?: string
     status: string
     categoryId: number
@@ -42,7 +40,6 @@ export interface ArticleUpdateDTO {
     slug: string
     summary: string
     content: string
-    contentHtml: string
     coverImage?: string
     status: string
     categoryId: number

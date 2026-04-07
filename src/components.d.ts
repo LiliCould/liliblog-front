@@ -17,6 +17,7 @@ declare module 'vue' {
     ArticleCard: typeof import('./components/common/ArticleCard.vue')['default']
     ArticleMeta: typeof import('./components/article/ArticleMeta.vue')['default']
     ArticleToc: typeof import('./components/article/ArticleToc.vue')['default']
+    ChatRoom: typeof import('./components/common/ChatRoom.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElDialog: typeof import('element-plus/es')['ElDialog']

@@ -25,7 +25,7 @@
         </article>
 
         <aside class="detail-sidebar">
-          <ArticleToc :html-content="article.contentHtml || ''" />
+          <ArticleToc :markdown-content="article.content || ''" />
         </aside>
       </div>
     </template>
@@ -173,6 +173,7 @@ watch(article, updateMetaTags, { deep: true })
   display: flex;
   gap: 24px;
   align-items: flex-start;
+  min-height: 100vh;
 }
 
 .article-content {
@@ -220,6 +221,11 @@ watch(article, updateMetaTags, { deep: true })
 .detail-sidebar {
   width: 260px;
   flex-shrink: 0;
+  position: sticky;
+  top: calc(var(--header-height) + 20px);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--header-height) - 40px);
+  overflow-y: auto;
 }
 
 @media (max-width: 1024px) {

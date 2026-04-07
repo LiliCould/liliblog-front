@@ -25,22 +25,23 @@ interface TocItem {
 }
 
 const props = defineProps<{
-  htmlContent: string
+  markdownContent: string
 }>()
 
 const tocItems = computed<TocItem[]>(() => {
-  if (!props.htmlContent) return []
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(props.htmlContent, 'text/html')
-  const headings = doc.querySelectorAll('h1, h2, h3, h4')
+  if (!props.markdownContent) return []
   const items: TocItem[] = []
-
-  headings.forEach((heading, index) => {
-    const level = parseInt(heading.tagName.charAt(1))
-    const text = heading.textContent?.trim() || ''
-    const id = heading.id || `heading-${index}`
-    if (text) {
-      items.push({ id, text, level })
+  const lines = props.markdownContent.split('\n')
+  
+  lines.forEach((line, index) => {
+    const headingMatch = line.match(/^(#{1,4})\s+(.*)$/)
+    if (headingMatch) {
+      const level = headingMatch[1].length
+      const text = headingMatch[2].trim()
+      const id = text || `heading-${index}`
+      if (text) {
+        items.push({ id, text, level })
+      }
     }
   })
 
@@ -57,15 +58,11 @@ function scrollToHeading(id: string) {
 
 <style scoped>
 .article-toc {
-  position: sticky;
-  top: calc(var(--header-height) + 20px);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   padding: 16px;
-  max-height: calc(100vh - var(--header-height) - 40px);
-  overflow-y: auto;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 

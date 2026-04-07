@@ -20,3 +20,17 @@ export function searchArticles(keyword: string) {
         params: { keyword },
     })
 }
+
+export function getChatMessages(beforeId?: number) {
+    return request.get<ApiResponse<any[]>>('/api/chat/messages', {
+        params: { beforeId },
+    })
+}
+
+export function updateChatRead() {
+    return request.post<ApiResponse<boolean>>('/api/chat/read')
+}
+
+export function getChatUnreadCount() {
+    return request.get<ApiResponse<number>>('/api/chat/unread-count')
+}

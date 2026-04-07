@@ -63,6 +63,19 @@ const routes: RouteRecordRaw[] = [
     },
 
 
+
+    {
+        path: '/chat',
+        name: 'Chat',
+        component: () => import('@/views/chat/ChatRoomView.vue'),
+        meta: { title: '聊天室', layout: 'blank' },
+    },
+    {
+        path: '/about',
+        name: 'About',
+        component: () => import('@/views/about/AboutView.vue'),
+        meta: { title: '关于我' },
+    },
     {
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
