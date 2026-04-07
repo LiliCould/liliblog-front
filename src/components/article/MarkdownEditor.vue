@@ -69,4 +69,23 @@ async function handleUploadImg(files: File[], callback: (urls: string[]) => void
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
 }
+
+.markdown-editor-wrapper :deep(.md-editor-preview ul) {
+  list-style-type: disc !important;
+}
+
+.markdown-editor-wrapper :deep(.md-editor-preview ol) {
+  list-style-type: decimal !important;
+}
+
+.markdown-editor-wrapper :deep(.md-editor-preview ul),
+.markdown-editor-wrapper :deep(.md-editor-preview ol) {
+  padding-left: 24px !important;
+  list-style: inherit !important;
+}
+
+/* 确保有序列表正确显示序号 */
+.markdown-editor-wrapper :deep(.md-editor-preview ol li) {
+  list-style-type: decimal !important;
+}
 </style>

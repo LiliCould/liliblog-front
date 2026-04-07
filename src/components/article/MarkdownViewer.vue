@@ -39,7 +39,12 @@
       </el-dropdown>
     </div>
 
-    <MdPreview :id="editorId" :modelValue="content" :previewTheme="currentPreviewTheme" :codeTheme="currentCodeTheme" />
+    <MdPreview 
+      :id="editorId" 
+      :modelValue="content" 
+      :previewTheme="currentPreviewTheme" 
+      :codeTheme="currentCodeTheme"
+    />
   </div>
 </template>
 
@@ -49,7 +54,7 @@ import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 import { Document, Tickets } from '@element-plus/icons-vue'
 
-defineProps<{
+const props = defineProps<{
   content: string
 }>()
 
@@ -175,5 +180,24 @@ const handleCodeThemeChange = (theme: string) => {
 
 .markdown-viewer :deep(.md-editor-preview blockquote) {
   border-left-color: var(--el-color-primary);
+}
+
+.markdown-viewer :deep(.md-editor-preview ul) {
+  list-style-type: disc !important;
+}
+
+.markdown-viewer :deep(.md-editor-preview ol) {
+  list-style-type: decimal !important;
+}
+
+.markdown-viewer :deep(.md-editor-preview ul),
+.markdown-viewer :deep(.md-editor-preview ol) {
+  padding-left: 24px !important;
+  list-style: inherit !important;
+}
+
+/* 确保有序列表正确显示序号 */
+.markdown-viewer :deep(.md-editor-preview ol li) {
+  list-style-type: decimal !important;
 }
 </style>
