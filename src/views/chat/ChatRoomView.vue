@@ -6,7 +6,7 @@
         <h1 class="chat-room-title">✨ 立里聊天室 ✨</h1>
         <div class="status-bar">
           <div class="online-count-mobile" @click="showOnlineMembers = !showOnlineMembers">
-            <span class="count-value">{{ onlineUsers.length }}</span>
+            <span class="count-value">{{ chatStore.onlineUsers.length }}</span>
             <span class="count-label">在线</span>
           </div>
           <span class="status-text">
@@ -25,16 +25,16 @@
             <h3 class="sidebar-title">👥 在线用户</h3>
             <div class="online-count">
               <span class="count-label">在线人数：</span>
-              <span class="count-value">{{ onlineUsers.length }}</span>
+              <span class="count-value">{{ chatStore.onlineUsers.length }}</span>
             </div>
             <div class="online-users">
-              <div v-for="user in onlineUsers" :key="user.id" class="online-user">
+              <div v-for="user in chatStore.onlineUsers" :key="user.id" class="online-user">
                 <el-avatar :size="32" :src="user.avatar || 'https://lilicould.cn/xiaodingdang.png'" class="user-avatar">
-                  {{ user.name?.charAt(0) || 'U' }}
+                  {{ user.nickname?.charAt(0) || 'U' }}
                 </el-avatar>
-                <span class="user-name">{{ user.name }}</span>
+                <span class="user-name">{{ user.nickname }}</span>
               </div>
-              <div v-if="onlineUsers.length === 0" class="no-online-users">
+              <div v-if="chatStore.onlineUsers.length === 0" class="no-online-users">
                 暂无在线用户
               </div>
             </div>
@@ -122,7 +122,6 @@ import MobileNav from '@/components/layout/MobileNav.vue'
 
 const messagesContainer = ref<HTMLElement>()
 const inputMessage = ref('')
-const onlineUsers = ref<any[]>([])
 
 // 回复相关状态
 const isReplying = ref(false)
@@ -303,10 +302,7 @@ onMounted(async () => {
   await chatStore.initialize()
   chatStore.updateReadPosition()
 
-  // 模拟在线用户数据，实际应从后端获取
-  onlineUsers.value = [
 
-  ]
 
   // 处理引用信息并滚动到底部（确保在初始化完成后执行）
   nextTick(() => {

@@ -60,6 +60,7 @@ interface SendMessage {
 export const useChatStore = defineStore('chat', () => {
   const ws = ref<WebSocket | null>(null)
   const messages = ref<Message[]>([])
+  const onlineUsers = ref<any[]>([])
   const isConnected = ref(false)
   const unreadCount = ref(0)
   const reconnectTimeout = ref<number | null>(null)
@@ -141,6 +142,19 @@ export const useChatStore = defineStore('chat', () => {
 
         try {
           const message = JSON.parse(event.data) as Message
+          
+          // 处理 ONLINE_LIST 类型的消息
+          if (message.type === 'ONLINE_LIST') {
+            try {
+              const onlineUsersData = JSON.parse(message.content)
+              onlineUsers.value = onlineUsersData
+              console.log('Updated online users:', onlineUsersData)
+            } catch (parseError) {
+              console.error('Failed to parse online users data:', parseError)
+            }
+            return
+          }
+          
           // 确保消息按时间顺序添加
           const insertIndex = messages.value.findIndex(msg => {
             const msgTime = new Date(msg.createTime || '').getTime()
@@ -355,6 +369,7 @@ export const useChatStore = defineStore('chat', () => {
   return {
     messages,
     chatMessages,
+    onlineUsers,
     isConnected,
     unreadCount,
     initialize,
