@@ -65,7 +65,7 @@
                     <template v-if="getUrlType(message.parentContent) === 'IMAGE'">
                       <el-image 
                         :src="message.parentContent" 
-                        :preview-src-list="[message.parentContent]"
+                        :preview-src-list="message.parentContent ? [message.parentContent] : []"
                         preview-teleported
                         fit="cover"
                         class="quote-thumb"
@@ -317,7 +317,7 @@ function getDisplayType(message: any): string {
   return getUrlType(url) || message.type || 'FILE'
 }
 
-function getUrlType(url: string): string {
+function getUrlType(url?: string): string {
   if (!url) return ''
   const extension = url.split('.').pop()?.toLowerCase() || ''
   
@@ -340,6 +340,10 @@ const emojiList = ['😊', '😂', '🤣', '😍', '😒', '😘', '😁', '😉
 
 // 输入框提示词计算
 const inputPlaceholder = computed(() => {
+  if (!userStore.isLoggedIn) {
+    return '登录后才可加入聊天室'
+  }
+
   if (!chatStore.isConnected) {
     if (isReplying.value) {
       return `回复 ${replyToMessage.value?.senderName}...`
@@ -436,7 +440,7 @@ function cancelFileSelection() {
   selectedFile.value = null
 }
 
-function getFileType(url: string): string {
+function getFileType(url?: string): string {
   if (!url) return 'FILE'
   const extension = url.split('.').pop()?.toLowerCase() || ''
   
@@ -448,7 +452,7 @@ function getFileType(url: string): string {
   return extension.toUpperCase() || 'FILE'
 }
 
-function getFileName(url: string): string {
+function getFileName(url?: string): string {
   if (!url) return '未知文件'
   return url.split('/').pop() || '未知文件'
 }
@@ -461,7 +465,8 @@ function addEmoji(emoji: string) {
   inputMessage.value += emoji
 }
 
-async function previewFile(url: string) {
+async function previewFile(url?: string) {
+  if (!url) return
   const type = getFileType(url)
   if (['PDF', 'DOCX', 'XLSX', 'PPTX'].includes(type)) {
     previewUrl.value = url
