@@ -178,35 +178,6 @@
               </div>
             </div>
 
-            <!-- 工具栏 -->
-            <div class="input-toolbar">
-              <div class="tool-left">
-                <el-popover placement="top-start" :width="300" trigger="click">
-                  <template #reference>
-                    <el-button type="text" class="tool-btn"><el-icon><ChatDotRound /></el-icon></el-button>
-                  </template>
-                  <div class="emoji-picker">
-                    <span v-for="emoji in emojiList" :key="emoji" class="emoji-item" @click="addEmoji(emoji)">
-                      {{ emoji }}
-                    </span>
-                  </div>
-                </el-popover>
-                
-                <el-button type="text" class="tool-btn" @click="triggerFileInput('IMAGE')"><el-icon><Picture /></el-icon></el-button>
-                <el-button type="text" class="tool-btn" @click="triggerFileInput('VIDEO')"><el-icon><VideoCamera /></el-icon></el-button>
-                <el-button type="text" class="tool-btn" @click="triggerFileInput('AUDIO')"><el-icon><Microphone /></el-icon></el-button>
-                <el-button type="text" class="tool-btn" @click="triggerFileInput('FILE')"><el-icon><Folder /></el-icon></el-button>
-                
-                <input 
-                  ref="fileInputRef" 
-                  type="file" 
-                  :accept="fileAccept"
-                  style="display: none" 
-                  @change="handleFileSelect"
-                />
-              </div>
-            </div>
-
             <el-input 
               v-model="inputMessage" 
               type="textarea" 
@@ -219,17 +190,48 @@
               :class="{ 'has-content': inputMessage.trim() || selectedFile, 'replying': isReplying, 'disconnected': !chatStore.isConnected }"
             />
             
-            <div class="input-footer">
-              <el-button 
-                type="primary" 
-                @click="sendMessage"
-                :disabled="!chatStore.isConnected || (!inputMessage.trim() && !selectedFile) || isUploading" 
-                class="send-button"
-                :loading="isUploading"
-                :class="{ 'can-send': chatStore.isConnected && (inputMessage.trim() || selectedFile) }"
-              >
-                {{ isUploading ? '上传中...' : '发送' }}
-              </el-button>
+            <div class="input-actions-row">
+              <!-- 工具栏 -->
+              <div class="input-toolbar">
+                <div class="tool-left">
+                  <el-popover placement="top-start" :width="280" trigger="click" popper-class="emoji-popover">
+                    <template #reference>
+                      <el-button type="text" class="tool-btn emoji-btn">😊</el-button>
+                    </template>
+                    <div class="emoji-picker">
+                      <span v-for="emoji in emojiList" :key="emoji" class="emoji-item" @click="addEmoji(emoji)">
+                        {{ emoji }}
+                      </span>
+                    </div>
+                  </el-popover>
+                  
+                  <el-button type="text" class="tool-btn" @click="triggerFileInput('IMAGE')"><el-icon><Picture /></el-icon></el-button>
+                  <el-button type="text" class="tool-btn" @click="triggerFileInput('VIDEO')"><el-icon><VideoCamera /></el-icon></el-button>
+                  <el-button type="text" class="tool-btn" @click="triggerFileInput('AUDIO')"><el-icon><Microphone /></el-icon></el-button>
+                  <el-button type="text" class="tool-btn" @click="triggerFileInput('FILE')"><el-icon><Folder /></el-icon></el-button>
+                  
+                  <input 
+                    ref="fileInputRef" 
+                    type="file" 
+                    :accept="fileAccept"
+                    style="display: none" 
+                    @change="handleFileSelect"
+                  />
+                </div>
+              </div>
+
+              <div class="input-footer">
+                <el-button 
+                  type="primary" 
+                  @click="sendMessage"
+                  :disabled="!chatStore.isConnected || (!inputMessage.trim() && !selectedFile) || isUploading" 
+                  class="send-button"
+                  :loading="isUploading"
+                  :class="{ 'can-send': chatStore.isConnected && (inputMessage.trim() || selectedFile) }"
+                >
+                  {{ isUploading ? '上传中...' : '发送' }}
+                </el-button>
+              </div>
             </div>
           </div>
         </div>
@@ -252,7 +254,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { Picture, VideoCamera, Microphone, Document, Download, Close, Folder, ChatDotRound } from '@element-plus/icons-vue'
+import { Picture, VideoCamera, Microphone, Document, Download, Close, Folder, Sunny } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { formatMessageTime } from '@/utils/format'
@@ -610,6 +612,58 @@ onUnmounted(() => {
   }
 })
 </script>
+
+<style>
+/* 全局样式，用于处理 Teleport 后的弹出框 */
+.emoji-popover {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.emoji-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 40px);
+  justify-content: center;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 16px 12px 12px;
+  box-sizing: border-box;
+}
+
+.emoji-picker::-webkit-scrollbar {
+  width: 4px;
+}
+
+.emoji-picker::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.emoji-picker::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+}
+
+.emoji-item {
+  font-size: 22px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 40px;
+  height: 40px;
+  width: 40px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.emoji-item:hover {
+  background: var(--color-primary-light);
+  transform: scale(1.1);
+}
+</style>
 
 <style scoped>
 .chat-room-view {
@@ -1287,8 +1341,14 @@ onUnmounted(() => {
 .input-toolbar {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
   gap: 4px;
+}
+
+.input-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
 }
 
 .tool-btn {
@@ -1304,33 +1364,14 @@ onUnmounted(() => {
   background: var(--color-primary-light);
 }
 
-.emoji-picker {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 8px;
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 12px;
-}
-
-.emoji-item {
-  font-size: 20px;
-  cursor: pointer;
-  text-align: center;
-  padding: 6px;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.emoji-item:hover {
-  background: var(--color-primary-light);
-  transform: scale(1.1);
+.emoji-btn {
+  font-size: 18px;
+  line-height: 1;
 }
 
 .input-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 12px;
 }
 
 .message-input :deep(.el-textarea__inner) {
