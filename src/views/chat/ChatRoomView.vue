@@ -58,88 +58,93 @@
               <div v-if="message.type === 'SYSTEM'" class="system-content">
                 {{ message.content }}
               </div>
-              <div v-else class="message-content-wrapper">
-                <div v-if="(message.parentId ?? 0) > 0" class="message-quote">
-                  <span class="quote-name">{{ message.parentSenderName || '用户' }}</span>
-                  <div class="quote-content">
-                    <template v-if="getUrlType(message.parentContent) === 'IMAGE'">
-                      <el-image 
-                        :src="message.parentContent" 
-                        :preview-src-list="message.parentContent ? [message.parentContent] : []"
-                        preview-teleported
-                        fit="cover"
-                        class="quote-thumb"
-                      />
-                    </template>
-                    <template v-else-if="getUrlType(message.parentContent) === 'VIDEO'">
-                      <div class="quote-file-mini" @click="previewFile(message.parentContent)">
-                        <el-icon><VideoCamera /></el-icon>
-                        <span>视频消息</span>
-                      </div>
-                    </template>
-                    <template v-else-if="getUrlType(message.parentContent) === 'AUDIO'">
-                      <div class="quote-file-mini" @click="previewFile(message.parentContent)">
-                        <el-icon><Microphone /></el-icon>
-                        <span>音频消息</span>
-                      </div>
-                    </template>
-                    <template v-else-if="getUrlType(message.parentContent) === 'FILE'">
-                      <div class="quote-file-mini" @click="previewFile(message.parentContent)">
-                        <el-icon><Document /></el-icon>
-                        <span>{{ getFileName(message.parentContent) }}</span>
-                      </div>
-                    </template>
-                    <template v-else>
-                      <span>{{ message.parentContent || '引用内容被删除或尚未加载' }}</span>
-                    </template>
-                  </div>
-                </div>
-                <div class="message-header">
+              <div v-else class="message-body">
+                <div class="message-info">
                   <span class="sender-name">{{ message.senderName }}</span>
                   <span class="message-time">{{ formatMessageTime(message.createTime) }}</span>
                 </div>
                 
-                <!-- 文字消息 -->
-                <div v-if="getDisplayType(message) === 'TEXT'" class="message-content">{{ message.content }}</div>
-                
-                <!-- 图片消息 -->
-                <div v-else-if="getDisplayType(message) === 'IMAGE'" class="message-content image-content">
-                  <el-image 
-                    :src="message.content" 
-                    :preview-src-list="[message.content]"
-                    preview-teleported
-                    fit="cover"
-                    class="chat-image"
-                  />
-                </div>
-                
-                <!-- 视频消息 -->
-                <div v-else-if="getDisplayType(message) === 'VIDEO'" class="message-content video-content">
-                  <video :src="message.content" controls class="chat-video"></video>
-                </div>
-                
-                <!-- 音频消息 -->
-                <div v-else-if="getDisplayType(message) === 'AUDIO'" class="message-content audio-content">
-                  <audio :src="message.content" controls class="chat-audio"></audio>
-                </div>
-                
-                <!-- 文件消息 (QQ风格卡片) -->
-                <div v-else class="message-content file-card">
-                  <div class="file-info">
-                    <div class="file-icon-wrapper">
-                      <el-icon :size="32" color="#409EFE"><Document /></el-icon>
-                    </div>
-                    <div class="file-details">
-                      <div class="file-name-text">{{ getFileName(message.content) }}</div>
-                      <div class="file-type-text">{{ getFileType(message.content) }}</div>
+                <div class="message-content-wrapper">
+                  <div v-if="(message.parentId ?? 0) > 0" class="message-quote">
+                    <span class="quote-name">{{ message.parentSenderName || '用户' }}</span>
+                    <div class="quote-content">
+                      <template v-if="getUrlType(message.parentContent) === 'IMAGE'">
+                        <el-image 
+                          :src="message.parentContent" 
+                          :preview-src-list="message.parentContent ? [message.parentContent] : []"
+                          preview-teleported
+                          fit="cover"
+                          class="quote-thumb"
+                        />
+                      </template>
+                      <template v-else-if="getUrlType(message.parentContent) === 'VIDEO'">
+                        <div class="quote-file-mini" @click="previewFile(message.parentContent)">
+                          <el-icon><VideoCamera /></el-icon>
+                          <span>视频消息</span>
+                        </div>
+                      </template>
+                      <template v-else-if="getUrlType(message.parentContent) === 'AUDIO'">
+                        <div class="quote-file-mini" @click="previewFile(message.parentContent)">
+                          <el-icon><Microphone /></el-icon>
+                          <span>音频消息</span>
+                        </div>
+                      </template>
+                      <template v-else-if="getUrlType(message.parentContent) === 'FILE'">
+                        <div class="quote-file-mini" @click="previewFile(message.parentContent)">
+                          <el-icon><Document /></el-icon>
+                          <span>{{ getFileName(message.parentContent) }}</span>
+                        </div>
+                      </template>
+                      <template v-else>
+                        <span>{{ message.parentContent || '引用内容被删除或尚未加载' }}</span>
+                      </template>
                     </div>
                   </div>
-                  <div class="file-actions">
-                    <el-button type="primary" link @click="previewFile(message.content)">预览</el-button>
-                    <el-divider direction="vertical" />
-                    <a :href="message.content" :download="getFileName(message.content)" class="download-btn">
-                      <el-icon :size="16"><Download /></el-icon>
-                    </a>
+                  
+                  <!-- 文字消息 -->
+                  <div v-if="getDisplayType(message) === 'TEXT'" class="message-content text-bubble">
+                    {{ message.content }}
+                  </div>
+                  
+                  <!-- 图片消息 -->
+                  <div v-else-if="getDisplayType(message) === 'IMAGE'" class="message-content image-content">
+                    <el-image 
+                      :src="message.content" 
+                      :preview-src-list="[message.content]"
+                      preview-teleported
+                      fit="cover"
+                      class="chat-image"
+                    />
+                  </div>
+                  
+                  <!-- 视频消息 -->
+                  <div v-else-if="getDisplayType(message) === 'VIDEO'" class="message-content video-content">
+                    <video :src="message.content" controls class="chat-video"></video>
+                  </div>
+                  
+                  <!-- 音频消息 -->
+                  <div v-else-if="getDisplayType(message) === 'AUDIO'" class="message-content audio-content">
+                    <audio :src="message.content" controls class="chat-audio"></audio>
+                  </div>
+                  
+                  <!-- 文件消息 (QQ风格卡片) -->
+                  <div v-else class="message-content file-card">
+                    <div class="file-info">
+                      <div class="file-icon-wrapper">
+                        <el-icon :size="32" color="#409EFE"><Document /></el-icon>
+                      </div>
+                      <div class="file-details">
+                        <div class="file-name-text">{{ getFileName(message.content) }}</div>
+                        <div class="file-type-text">{{ getFileType(message.content) }}</div>
+                      </div>
+                    </div>
+                    <div class="file-actions">
+                      <el-button type="primary" link @click="previewFile(message.content)">预览</el-button>
+                      <el-divider direction="vertical" />
+                      <a :href="message.content" :download="getFileName(message.content)" class="download-btn">
+                        <el-icon :size="16"><Download /></el-icon>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -965,10 +970,10 @@ onUnmounted(() => {
 }
 
 .message-item {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -977,7 +982,6 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -986,21 +990,17 @@ onUnmounted(() => {
 
 .message-item.system-message {
   align-items: center;
-  margin: 12px 0;
+  margin: 16px 0;
   justify-content: center;
 }
 
 .system-content {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.05);
   color: #999;
-  padding: 4px 12px;
-  border-radius: 0;
+  padding: 4px 16px;
+  border-radius: 20px;
   font-size: 12px;
-  box-shadow: none;
-  border: none;
-  backdrop-filter: none;
   text-align: center;
-  font-style: italic;
 }
 
 .message-item.own-message {
@@ -1009,93 +1009,197 @@ onUnmounted(() => {
 
 .message-avatar {
   flex-shrink: 0;
-  transition: all 0.3s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.message-item:hover .message-avatar {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.message-content-wrapper {
-  max-width: 70%;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 10px 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s;
-  position: relative;
-  border: 1px solid rgba(255, 105, 180, 0.1);
-  backdrop-filter: blur(5px);
-}
-
-.message-item.own-message .message-content-wrapper {
-  background: rgba(255, 105, 180, 0.1);
-  color: #333;
-  border-color: rgba(255, 105, 180, 0.3);
-  box-shadow: 0 2px 8px rgba(255, 105, 180, 0.15);
-}
-
-.message-content-wrapper:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.message-item.own-message .message-content-wrapper:hover {
-  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
-}
-
-.message-header {
+.message-body {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  max-width: calc(100% - 100px);
+}
+
+.message-item.own-message .message-body {
+  align-items: flex-end;
+}
+
+.message-info {
+  display: flex;
   align-items: center;
-  margin-bottom: 4px;
-  font-size: 11px;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.message-item.own-message .message-info {
+  flex-direction: row-reverse;
 }
 
 .sender-name {
-  font-weight: 600;
-  color: #ff69b4;
-  font-size: 12px;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.05);
-}
-
-.message-item.own-message .sender-name {
-  color: #333;
+  font-weight: 500;
+  color: #666;
 }
 
 .message-time {
-  color: #999;
-  margin-left: 10px;
-  font-size: 10px;
+  font-size: 11px;
+  opacity: 0.8;
 }
 
-.message-content {
+.message-content-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.text-bubble {
+  background: white;
+  padding: 10px 14px;
+  border-radius: 4px 16px 16px 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: var(--color-text);
   word-break: break-word;
   white-space: pre-wrap;
-  color: #333;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.message-item.own-message .text-bubble {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-light-2);
+  border-radius: 16px 4px 16px 16px;
+  color: var(--color-primary);
+}
+
+/* 媒体内容样式 */
+.image-content, .video-content, .audio-content {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.chat-image {
+  max-width: 100%;
+  max-height: 300px;
+  display: block;
+  cursor: zoom-in;
+}
+
+.chat-video {
+  max-width: 100%;
+  max-height: 300px;
+  display: block;
+}
+
+.chat-audio {
+  max-width: 100%;
+}
+
+/* 文件卡片 微信风格优化 */
+.file-card {
+  width: 280px;
+  max-width: 100%;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.message-item.own-message .file-card {
+  border-color: var(--color-primary-light-2);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: var(--color-primary-light);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.file-details {
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-name-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-title);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-type-text {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+.file-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  color: #666;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.download-btn:hover {
+  background: var(--color-primary);
+  color: white;
 }
 
 /* 引用效果 */
 .message-quote {
   margin-bottom: 8px;
   padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(0, 0, 0, 0.03);
   border-left: 3px solid var(--color-primary);
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+.message-item.own-message .message-quote {
+  border-left: none;
+  border-right: 3px solid var(--color-primary);
+  align-items: flex-end;
+}
+
 .quote-name {
   font-weight: 600;
   color: var(--color-primary);
-  font-size: 12px;
 }
 
 .quote-content {
@@ -1105,9 +1209,13 @@ onUnmounted(() => {
   gap: 8px;
 }
 
+.message-item.own-message .quote-content {
+  flex-direction: row-reverse;
+}
+
 .quote-thumb {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 4px;
   cursor: zoom-in;
   border: 1px solid var(--color-border);
@@ -1123,6 +1231,7 @@ onUnmounted(() => {
   cursor: pointer;
   border: 1px solid var(--color-border);
   transition: all 0.2s;
+  font-size: 11px;
 }
 
 .quote-file-mini:hover {
@@ -1130,8 +1239,32 @@ onUnmounted(() => {
   color: var(--color-primary);
 }
 
-.quote-file-mini .el-icon {
-  font-size: 16px;
+/* 响应式设计补全 */
+@media (max-width: 768px) {
+  .chat-main {
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+  }
+
+  .messages-container {
+    padding: 12px;
+    -webkit-overflow-scrolling: touch; /* 优化 iOS 滚动 */
+    touch-action: pan-y; /* 确保纵向滑动灵敏 */
+  }
+
+  .message-body {
+    max-width: calc(100% - 60px);
+  }
+
+  .file-card {
+    width: 100%;
+  }
+
+  .text-bubble {
+    font-size: 15px; /* 移动端文字稍大 */
+    padding: 8px 12px;
+  }
 }
 
 /* 回复菜单 */
