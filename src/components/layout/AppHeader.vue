@@ -99,7 +99,7 @@ function handleCommand(command: string) {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
-  z-index: 100;
+  z-index: 1000;
 }
 
 .header-inner {

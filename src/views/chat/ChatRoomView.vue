@@ -67,7 +67,49 @@
                   <span class="sender-name">{{ message.senderName }}</span>
                   <span class="message-time">{{ formatMessageTime(message.createTime) }}</span>
                 </div>
-                <div class="message-content">{{ message.content }}</div>
+                
+                <!-- 文字消息 -->
+                <div v-if="message.type === 'TEXT'" class="message-content">{{ message.content }}</div>
+                
+                <!-- 图片消息 -->
+                <div v-else-if="message.type === 'IMAGE'" class="message-content image-content">
+                  <el-image 
+                    :src="message.content" 
+                    :preview-src-list="[message.content]"
+                    fit="cover"
+                    class="chat-image"
+                  />
+                </div>
+                
+                <!-- 视频消息 -->
+                <div v-else-if="message.type === 'VIDEO'" class="message-content video-content">
+                  <video :src="message.content" controls class="chat-video"></video>
+                </div>
+                
+                <!-- 音频消息 -->
+                <div v-else-if="message.type === 'AUDIO'" class="message-content audio-content">
+                  <audio :src="message.content" controls class="chat-audio"></audio>
+                </div>
+                
+                <!-- 文件消息 (QQ风格卡片) -->
+                <div v-else-if="message.type === 'FILE'" class="message-content file-card">
+                  <div class="file-info">
+                    <div class="file-icon-wrapper">
+                      <el-icon :size="32" color="#409EFE"><Document /></el-icon>
+                    </div>
+                    <div class="file-details">
+                      <div class="file-name-text">{{ getFileName(message.content) }}</div>
+                      <div class="file-type-text">{{ getFileType(message.content) }}</div>
+                    </div>
+                  </div>
+                  <div class="file-actions">
+                    <el-button type="primary" link @click="previewFile(message.content)">预览</el-button>
+                    <el-divider direction="vertical" />
+                    <a :href="message.content" :download="getFileName(message.content)" class="download-btn">
+                      <el-icon :size="16"><Download /></el-icon>
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -92,33 +134,111 @@
               <div class="reply-content">{{ replyToMessage.content.length > 50 ? replyToMessage.content.substring(0, 50)
                 + '...' : replyToMessage.content }}</div>
             </div>
-            <el-input v-model="inputMessage" :placeholder="inputPlaceholder" @keyup.enter="sendMessage"
-              :disabled="!chatStore.isConnected" class="message-input"
-              :class="{ 'has-content': inputMessage.trim(), 'replying': isReplying, 'disconnected': !chatStore.isConnected }">
-              <template #append>
-                <el-button type="primary" @click="sendMessage"
-                  :disabled="!chatStore.isConnected || !inputMessage.trim()" class="send-button"
-                  :class="{ 'can-send': chatStore.isConnected && inputMessage.trim() }">
-                  🚀 发送
+
+            <!-- 选中文件展示 -->
+            <div v-if="selectedFile" class="selected-file-info">
+              <div class="file-item">
+                <el-icon><Document /></el-icon>
+                <span class="file-name">{{ selectedFile.name }}</span>
+                <el-button type="text" @click="cancelFileSelection" class="cancel-file">
+                  <el-icon><Close /></el-icon>
                 </el-button>
-              </template>
-            </el-input>
+              </div>
+            </div>
+
+            <!-- 工具栏 -->
+            <div class="input-toolbar">
+              <div class="tool-left">
+                <el-popover placement="top-start" :width="300" trigger="click">
+                  <template #reference>
+                    <el-button type="text" class="tool-btn"><el-icon><ChatLineRound /></el-icon></el-button>
+                  </template>
+                  <div class="emoji-picker">
+                    <span v-for="emoji in emojiList" :key="emoji" class="emoji-item" @click="addEmoji(emoji)">
+                      {{ emoji }}
+                    </span>
+                  </div>
+                </el-popover>
+                
+                <el-button type="text" class="tool-btn" @click="triggerFileInput('IMAGE')"><el-icon><Picture /></el-icon></el-button>
+                <el-button type="text" class="tool-btn" @click="triggerFileInput('VIDEO')"><el-icon><VideoCamera /></el-icon></el-button>
+                <el-button type="text" class="tool-btn" @click="triggerFileInput('AUDIO')"><el-icon><Microphone /></el-icon></el-button>
+                <el-button type="text" class="tool-btn" @click="triggerFileInput('FILE')"><el-icon><Folder /></el-icon></el-button>
+                
+                <input 
+                  ref="fileInputRef" 
+                  type="file" 
+                  style="display: none" 
+                  @change="handleFileSelect"
+                />
+              </div>
+            </div>
+
+            <el-input 
+              v-model="inputMessage" 
+              type="textarea" 
+              :rows="3"
+              :placeholder="inputPlaceholder" 
+              @keyup.enter.exact.prevent="sendMessage"
+              :disabled="!chatStore.isConnected || isUploading || !!selectedFile" 
+              class="message-input"
+              resize="none"
+              :class="{ 'has-content': inputMessage.trim() || selectedFile, 'replying': isReplying, 'disconnected': !chatStore.isConnected }"
+            />
+            
+            <div class="input-footer">
+              <el-button 
+                type="primary" 
+                @click="sendMessage"
+                :disabled="!chatStore.isConnected || (!inputMessage.trim() && !selectedFile) || isUploading" 
+                class="send-button"
+                :loading="isUploading"
+                :class="{ 'can-send': chatStore.isConnected && (inputMessage.trim() || selectedFile) }"
+              >
+                {{ isUploading ? '上传中...' : '发送' }}
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <MobileNav />
+
+    <!-- 预览弹窗 -->
+    <el-dialog v-model="previewDialogVisible" title="文件预览" width="80%" destroy-on-close>
+      <div class="preview-container">
+        <vue-office-docx v-if="previewType === 'DOCX'" :src="previewUrl" />
+        <vue-office-excel v-if="previewType === 'XLSX'" :src="previewUrl" />
+        <vue-office-pdf v-if="previewType === 'PDF'" :src="previewUrl" />
+        <vue-office-pptx v-if="previewType === 'PPTX'" :src="previewUrl" />
+        <MdPreview v-if="previewType === 'MD'" :modelValue="markdownContent" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { Loading } from '@element-plus/icons-vue'
+import { Loading, Picture, VideoCamera, Microphone, Document, Download, Close, ChatLineRound, Folder } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { formatMessageTime } from '@/utils/format'
+import { uploadFile } from '@/api/file'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import MobileNav from '@/components/layout/MobileNav.vue'
+import { ElMessage } from 'element-plus'
+
+// vue-office components
+import VueOfficeDocx from '@vue-office/docx'
+import VueOfficeExcel from '@vue-office/excel'
+import VueOfficePdf from '@vue-office/pdf'
+import VueOfficePptx from '@vue-office/pptx'
+import '@vue-office/docx/lib/index.css'
+import '@vue-office/excel/lib/index.css'
+
+// Markdown preview
+import { MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/preview.css'
 
 const messagesContainer = ref<HTMLElement>()
 const inputMessage = ref('')
@@ -137,10 +257,24 @@ const showOnlineMembers = ref(false)
 const userStore = useUserStore()
 const chatStore = useChatStore()
 
+// 文件上传相关
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const selectedFileType = ref<'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE'>('IMAGE')
+const isUploading = ref(false)
+const selectedFile = ref<File | null>(null)
+
+// 预览相关
+const previewDialogVisible = ref(false)
+const previewUrl = ref('')
+const previewType = ref('')
+const markdownContent = ref('')
+
+// 表情列表
+const emojiList = ['😊', '😂', '🤣', '😍', '😒', '😘', '😁', '😉', '🙌', '👍', '🌹', '🎉', '🔥', '✨', '🎈', '🎁', '🎂', '🌈', '🍦', '🍓', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵']
+
 // 输入框提示词计算
 const inputPlaceholder = computed(() => {
   if (!chatStore.isConnected) {
-    // 断开连接时：如果有内容或正在回复，保持原有提示；否则显示断连提示
     if (isReplying.value) {
       return `回复 ${replyToMessage.value?.senderName}...`
     }
@@ -150,7 +284,10 @@ const inputPlaceholder = computed(() => {
     return '已断开连接，请尝试刷新处理'
   }
 
-  // 已连接时的提示词
+  if (selectedFile.value) {
+    return '已选中文件，点击发送上传'
+  }
+
   if (isReplying.value) {
     return `回复 ${replyToMessage.value?.senderName}...`
   }
@@ -177,29 +314,10 @@ function startReply(message: any) {
   replyToMessage.value = message
   // 聚焦到输入框
   nextTick(() => {
-    // 尝试多种方式聚焦输入框
-    const inputElement = document.querySelector('.message-input input') as HTMLInputElement
     const textareaElement = document.querySelector('.message-input textarea') as HTMLTextAreaElement
-    const inputContainer = document.querySelector('.message-input') as HTMLElement
-
-    if (inputElement) {
-      inputElement.focus()
-    } else if (textareaElement) {
+    if (textareaElement) {
       textareaElement.focus()
-    } else if (inputContainer) {
-      inputContainer.focus()
     }
-
-    // 确保输入框获得焦点
-    setTimeout(() => {
-      if (inputElement) {
-        inputElement.focus()
-      } else if (textareaElement) {
-        textareaElement.focus()
-      } else if (inputContainer) {
-        inputContainer.focus()
-      }
-    }, 100)
   })
 }
 
@@ -209,28 +327,127 @@ function cancelReply() {
   inputMessage.value = ''
 }
 
-function sendMessage() {
-  const content = inputMessage.value.trim()
-  if (!content || !chatStore.isConnected) return
+// 文件处理方法
+function triggerFileInput(type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE') {
+  if (!chatStore.isConnected) return
+  selectedFileType.value = type
+  fileInputRef.value?.click()
+}
 
-  const messageData: any = {
-    content,
-    type: 'TEXT',
+function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (!files || files.length === 0) return
+
+  const file = files[0]
+  selectedFile.value = file
+  inputMessage.value = '' // 选中文件后清空文字
+  target.value = ''
+}
+
+function cancelFileSelection() {
+  selectedFile.value = null
+}
+
+function getFileType(url: string): string {
+  if (!url) return 'FILE'
+  const extension = url.split('.').pop()?.toLowerCase() || ''
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'IMAGE'
+  if (['mp4', 'webm', 'ogg', 'mov'].includes(extension)) return 'VIDEO'
+  if (['mp3', 'wav', 'ogg', 'flac'].includes(extension)) return 'AUDIO'
+  if (['pdf', 'docx', 'xlsx', 'pptx', 'md'].includes(extension)) return extension.toUpperCase()
+  return 'FILE'
+}
+
+function getFileName(url: string): string {
+  if (!url) return '未知文件'
+  return url.split('/').pop() || '未知文件'
+}
+
+function addEmoji(emoji: string) {
+  if (selectedFile.value) {
+    ElMessage.warning('选中文件后不可发送文字消息')
+    return
+  }
+  inputMessage.value += emoji
+}
+
+async function previewFile(url: string) {
+  const type = getFileType(url)
+  if (['PDF', 'DOCX', 'XLSX', 'PPTX'].includes(type)) {
+    previewUrl.value = url
+    previewType.value = type
+    previewDialogVisible.value = true
+  } else if (type === 'MD') {
+    try {
+      const response = await fetch(url)
+      markdownContent.value = await response.text()
+      previewType.value = 'MD'
+      previewDialogVisible.value = true
+    } catch (error) {
+      console.error('Failed to fetch markdown content:', error)
+      ElMessage.error('获取 Markdown 内容失败')
+    }
+  } else if (type === 'IMAGE' || type === 'VIDEO' || type === 'AUDIO') {
+    window.open(url, '_blank')
+  } else {
+    window.open(url, '_blank')
+  }
+}
+
+async function sendMessage() {
+  if (!chatStore.isConnected) return
+
+  const commonData: any = {
     parentId: isReplying.value && replyToMessage.value ? replyToMessage.value.id : 0
   }
 
   // 添加引用信息，确保前端能够显示引用内容
   if (isReplying.value && replyToMessage.value) {
-    messageData.parentContent = replyToMessage.value.content
-    messageData.parentSenderName = replyToMessage.value.senderName
+    commonData.parentContent = replyToMessage.value.content
+    commonData.parentSenderName = replyToMessage.value.senderName
   }
 
-  chatStore.sendMessage(messageData)
+  if (selectedFile.value) {
+    isUploading.value = true
+    try {
+      const response = await uploadFile(selectedFile.value, 'chat')
+      const apiResponse = response as any
+      if (apiResponse.code === 200) {
+        const fileUrl = apiResponse.message
+        const messageData: any = {
+          ...commonData,
+          content: fileUrl,
+          type: selectedFileType.value
+        }
+        
+        chatStore.sendMessage(messageData)
+        selectedFile.value = null
+        isReplying.value = false
+        replyToMessage.value = null
+      }
+    } catch (error) {
+      console.error('File upload failed:', error)
+      ElMessage.error('文件上传失败')
+    } finally {
+      isUploading.value = false
+    }
+  } else {
+    const content = inputMessage.value.trim()
+    if (!content) return
 
-  inputMessage.value = ''
-  isReplying.value = false
-  replyToMessage.value = null
-  // 发送消息后手动滚动到底部
+    const messageData: any = {
+      ...commonData,
+      content,
+      type: 'TEXT'
+    }
+
+    chatStore.sendMessage(messageData)
+    inputMessage.value = ''
+    isReplying.value = false
+    replyToMessage.value = null
+  }
+  
   scrollToBottom()
 }
 
@@ -864,12 +1081,219 @@ onUnmounted(() => {
 }
 
 .input-area {
-  padding: 16px 20px;
+  padding: 12px 20px;
   border-top: 1px solid rgba(255, 105, 180, 0.2);
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   transition: all 0.3s ease-in-out;
-  animation: slideDown 0.3s ease-out;
+}
+
+/* 消息内容类型样式 */
+.image-content {
+  padding: 4px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.chat-image {
+  max-width: 250px;
+  max-height: 250px;
+  border-radius: 8px;
+  cursor: zoom-in;
+  display: block;
+}
+
+.chat-video {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 8px;
+  display: block;
+}
+
+.chat-audio {
+  max-width: 250px;
+  height: 40px;
+}
+
+/* 文件卡片 QQ风格 */
+.file-card {
+  width: 260px;
+  background: white !important;
+  border-radius: 12px;
+  border: 1px solid #ebeef5;
+  padding: 12px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: #f0f7ff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-details {
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-name-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-type-text {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
+}
+
+.file-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-top: 1px solid #f0f2f5;
+  padding-top: 8px;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f0f2f5;
+  color: #606266;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.download-btn:hover {
+  background: #ff69b4;
+  color: white;
+}
+
+/* 输入区域增强 */
+.selected-file-info {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #f4f4f5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 13px;
+  color: #606266;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cancel-file {
+  padding: 0;
+  color: #909399;
+}
+
+.input-toolbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tool-btn {
+  font-size: 20px;
+  color: #606266;
+  padding: 4px 8px;
+  transition: all 0.2s;
+}
+
+.tool-btn:hover {
+  color: #ff69b4;
+  background: rgba(255, 105, 180, 0.1);
+  border-radius: 4px;
+}
+
+.emoji-picker {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.emoji-item {
+  font-size: 20px;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.emoji-item:hover {
+  background: #f0f2f5;
+  transform: scale(1.2);
+}
+
+.input-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.message-input :deep(.el-textarea__inner) {
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 105, 180, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.message-input :deep(.el-textarea__inner:focus) {
+  border-color: #ff69b4;
+  box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.1);
+  background: white;
+}
+
+.preview-container {
+  min-height: 500px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.no-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #909399;
 }
 
 /* 回复模式下的输入框样式 */
@@ -878,52 +1302,19 @@ onUnmounted(() => {
   border-top-color: rgba(255, 105, 180, 0.3);
 }
 
-.message-input.replying {
+.message-input.replying :deep(.el-textarea__inner) {
   border-color: #ff69b4;
   box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.1);
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.message-input {
-  border-radius: 20px;
-  border: 1px solid rgba(255, 105, 180, 0.3);
-  transition: all 0.3s;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.message-input:focus {
+.message-input.has-content :deep(.el-textarea__inner) {
   border-color: #ff69b4;
-  box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.1);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.message-input.has-content {
-  border-color: #ff69b4;
-  box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.08);
 }
 
 /* 断连状态 */
-.message-input.disconnected {
+.message-input.disconnected :deep(.el-textarea__inner) {
   border-color: #f56c6c;
   background: rgba(245, 108, 108, 0.05);
-  opacity: 0.7;
-}
-
-.message-input.disconnected:focus {
-  border-color: #f56c6c;
-  box-shadow: 0 0 0 3px rgba(245, 108, 108, 0.1);
 }
 
 .send-button {
@@ -941,34 +1332,17 @@ onUnmounted(() => {
   border-color: #ff69b4;
   color: #fff;
   box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
-  animation: buttonPulse 2s infinite;
 }
 
-@keyframes buttonPulse {
-
-  0%,
-  100% {
-    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
-  }
-
-  50% {
-    box-shadow: 0 6px 16px rgba(255, 105, 180, 0.5);
-  }
-}
-
-.send-button.can-send:hover {
-  background: linear-gradient(135deg, #ff5aa8, #ff70b0);
-  border-color: #ff5aa8;
-  box-shadow: 0 6px 16px rgba(255, 105, 180, 0.4);
+.send-button:hover.can-send {
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 105, 180, 0.4);
 }
 
 .send-button:disabled {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: #ddd;
-  color: #999;
-  box-shadow: none;
-  cursor: not-allowed;
+  background: #f5f7fa;
+  border-color: #e4e7ed;
+  color: #c0c4cc;
 }
 
 /* 响应式设计 */

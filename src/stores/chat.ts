@@ -12,6 +12,7 @@ interface Message {
   senderAvatar?: string
   content: string
   type: string
+  fileType?: string
   parentId?: number
   ipAddress?: string
   createTime?: string
@@ -52,6 +53,7 @@ function saveMessagesToCache(messages: Message[]) {
 interface SendMessage {
   content: string
   type: string
+  fileType?: string
   parentId: number
   parentContent?: string
   parentSenderName?: string
@@ -155,17 +157,30 @@ export const useChatStore = defineStore('chat', () => {
             return
           }
           
-          // 确保消息按时间顺序添加
-          const insertIndex = messages.value.findIndex(msg => {
-            const msgTime = new Date(msg.createTime || '').getTime()
-            const newMsgTime = new Date(message.createTime || '').getTime()
-            return newMsgTime < msgTime
+          // 查找并替换临时消息
+          const tempMessageIndex = messages.value.findIndex(msg => {
+            // 临时消息的 ID 是时间戳，而服务器返回的消息 ID 是数字
+            return typeof msg.id === 'number' && msg.id > 1000000000000 && // 时间戳大于 2001 年
+                   msg.senderUsername === message.senderUsername &&
+                   msg.content === message.content
           })
-
-          if (insertIndex === -1) {
-            messages.value.push(message)
+          
+          if (tempMessageIndex !== -1) {
+            // 替换临时消息为服务器返回的消息
+            messages.value[tempMessageIndex] = message
           } else {
-            messages.value.splice(insertIndex, 0, message)
+            // 确保消息按时间顺序添加
+            const insertIndex = messages.value.findIndex(msg => {
+              const msgTime = new Date(msg.createTime || '').getTime()
+              const newMsgTime = new Date(message.createTime || '').getTime()
+              return newMsgTime < msgTime
+            })
+
+            if (insertIndex === -1) {
+              messages.value.push(message)
+            } else {
+              messages.value.splice(insertIndex, 0, message)
+            }
           }
           // 更新缓存
           saveMessagesToCache(messages.value)
@@ -244,6 +259,10 @@ export const useChatStore = defineStore('chat', () => {
       newMessages.forEach(msg => {
         if (msg.id) {
           messageMap.set(msg.id, msg)
+        } else {
+          // 对于没有 ID 的消息，直接添加到消息列表
+          // 注意：这些消息可能无法被引用，但可以正常显示
+          messages.value.push(msg)
         }
       })
       
@@ -302,6 +321,23 @@ export const useChatStore = defineStore('chat', () => {
     } catch (error) {
       console.error('Failed to send message:', error)
     }
+  }
+
+  function addMessage(message: Message) {
+    // 确保消息按时间顺序添加
+    const insertIndex = messages.value.findIndex(msg => {
+      const msgTime = new Date(msg.createTime || '').getTime()
+      const newMsgTime = new Date(message.createTime || '').getTime()
+      return newMsgTime < msgTime
+    })
+
+    if (insertIndex === -1) {
+      messages.value.push(message)
+    } else {
+      messages.value.splice(insertIndex, 0, message)
+    }
+    // 更新缓存
+    saveMessagesToCache(messages.value)
   }
 
   async function updateReadPosition() {
@@ -374,6 +410,7 @@ export const useChatStore = defineStore('chat', () => {
     unreadCount,
     initialize,
     sendMessage,
+    addMessage,
     updateReadPosition,
     getUnreadCount,
     closeConnection

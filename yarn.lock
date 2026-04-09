@@ -991,6 +991,26 @@
     path-browserify "^1.0.1"
     vscode-uri "^3.0.8"
 
+"@vue-office/docx@^1.6.3":
+  version "1.6.3"
+  resolved "https://registry.npmmirror.com/@vue-office/docx/-/docx-1.6.3.tgz"
+  integrity sha512-Cs+3CAaRBOWOiW4XAhTwwxJ0dy8cPIf6DqfNvYcD3YACiLwO4kuawLF2IAXxyijhbuOeoFsfvoVbOc16A/4bZA==
+
+"@vue-office/excel@^1.7.14":
+  version "1.7.14"
+  resolved "https://registry.npmmirror.com/@vue-office/excel/-/excel-1.7.14.tgz"
+  integrity sha512-pVUgt+emDQUnW7q22CfnQ+jl43mM/7IFwYzOg7lwOwPEbiVB4K4qEQf+y/bc4xGXz75w1/e3Kz3G6wAafmFBFg==
+
+"@vue-office/pdf@^2.0.10":
+  version "2.0.10"
+  resolved "https://registry.npmmirror.com/@vue-office/pdf/-/pdf-2.0.10.tgz"
+  integrity sha512-yHVLrMAKpMPBkhBwofFyGEtEeJF0Zd7oGmf56Pe5aj/xObdRq3E1CIZqTqhWJNgHV8oLQqaX0vs4p5T1zq+GIA==
+
+"@vue-office/pptx@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.npmmirror.com/@vue-office/pptx/-/pptx-1.0.1.tgz"
+  integrity sha512-+V7Kctzl6f6+Yk4NaD/wQGRIkqLWcowe0jEhPexWQb8Oilbzt1OyhWRWcMsxNDTdrgm6aMLP+0/tmw27cxddMg==
+
 "@vue/compiler-core@3.5.31":
   version "3.5.31"
   resolved "https://registry.npmmirror.com/@vue/compiler-core/-/compiler-core-3.5.31.tgz"
@@ -1537,7 +1557,7 @@ lodash-unified@^1.0.3:
   resolved "https://registry.npmmirror.com/lodash-unified/-/lodash-unified-1.0.3.tgz"
   integrity sha512-WK9qSozxXOD7ZJQlpSqOT+om2ZfcT4yO+03FuzAHD0wF6S0l0090LRPDx3vhTTLZ8cFKpBn+IOcVXK6qOcIlfQ==
 
-lodash@*, lodash@^4.17.23:
+lodash@*, lodash@^4.17.21, lodash@^4.17.23:
   version "4.17.23"
   resolved "https://registry.npmmirror.com/lodash/-/lodash-4.17.23.tgz"
   integrity sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==
@@ -2092,6 +2112,19 @@ unplugin@^3.0.0:
     picomatch "^4.0.3"
     webpack-virtual-modules "^0.6.2"
 
+v-viewer@^3.0.11:
+  version "3.0.11"
+  resolved "https://registry.npmmirror.com/v-viewer/-/v-viewer-3.0.11.tgz"
+  integrity sha512-E8LOdAxhzuktt4HB3PswVCccQ1Q1sYHYnLsS6zaJISpb5EvmAFs5sYNfXnDLFxVb5DQ82v4ZlGxkYlseXwWRJw==
+  dependencies:
+    lodash "^4.17.21"
+    viewerjs "^1.9.0"
+
+viewerjs@^1.11.7, viewerjs@^1.9.0:
+  version "1.11.7"
+  resolved "https://registry.npmmirror.com/viewerjs/-/viewerjs-1.11.7.tgz"
+  integrity sha512-0JuVqOmL5v1jmEAlG5EBDR3XquxY8DWFQbFMprOXgaBB0F7Q/X9xWdEaQc59D8xzwkdUgXEMSSknTpriq95igg==
+
 "vite@^2.9.0 || ^3.0.0-0 || ^4.0.0 || ^5.0.0-0 || ^6.0.0-0 || ^7.0.0-0 || ^8.0.0-0", "vite@^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0", vite@^8.0.1:
   version "8.0.3"
   resolved "https://registry.npmmirror.com/vite/-/vite-8.0.3.tgz"
@@ -2120,6 +2153,11 @@ vue-demi@^0.14.10:
   resolved "https://registry.npmmirror.com/vue-demi/-/vue-demi-0.14.10.tgz"
   integrity sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==
 
+vue-demi@^0.14.6:
+  version "0.14.6"
+  resolved "https://registry.npmmirror.com/vue-demi/-/vue-demi-0.14.6.tgz"
+  integrity sha512-8QA7wrYSHKaYgUxDA5ZC24w+eHm3sYCbp0EzcDwKqN3p6HqtTCGR/GVsPyZW92unff4UlcSh++lmqDWN3ZIq4w==
+
 vue-router@^4:
   version "4.6.4"
   resolved "https://registry.npmmirror.com/vue-router/-/vue-router-4.6.4.tgz"
@@ -2135,7 +2173,7 @@ vue-tsc@^3.2.5:
     "@volar/typescript" "2.4.28"
     "@vue/language-core" "3.2.6"
 
-"vue@^2.7.0 || ^3.5.11", vue@^3.0.0, "vue@^3.0.0-0 || ^2.6.0", vue@^3.2.0, vue@^3.2.25, vue@^3.3.0, vue@^3.4.0, vue@^3.5.0, vue@^3.5.13, vue@^3.5.3, vue@^3.5.30, vue@>=3.0.1, vue@3.5.31:
+"vue@^2.0.0 || >=3.0.0", "vue@^2.7.0 || ^3.5.11", vue@^3.0.0, "vue@^3.0.0-0 || ^2.6.0", vue@^3.2.0, vue@^3.2.25, vue@^3.3.0, vue@^3.4.0, vue@^3.5.0, vue@^3.5.13, vue@^3.5.3, vue@^3.5.30, vue@>=3.0.1, vue@3.5.31:
   version "3.5.31"
   resolved "https://registry.npmmirror.com/vue/-/vue-3.5.31.tgz"
   integrity sha512-iV/sU9SzOlmA/0tygSmjkEN6Jbs3nPoIPFhCMLD2STrjgOU8DX7ZtzMhg4ahVwf5Rp9KoFzcXeB1ZrVbLBp5/Q==

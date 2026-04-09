@@ -71,6 +71,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '聊天室', layout: 'blank' },
     },
     {
+        path: '/preview',
+        name: 'FilePreview',
+        component: () => import('@/views/preview/FilePreview.vue'),
+        meta: { title: '文件预览', layout: 'blank' },
+    },
+    {
         path: '/about',
         name: 'About',
         component: () => import('@/views/about/AboutView.vue'),

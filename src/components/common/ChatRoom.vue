@@ -21,11 +21,6 @@
         ref="messagesContainer"
         @scroll="handleScroll"
       >
-        <div v-if="chatStore.isLoading" class="loading-message">
-          <el-icon class="loading-icon"><Loading /></el-icon>
-          加载历史消息...
-        </div>
-
         <div 
           v-for="message in chatStore.messages" 
           :key="message.id || message.content"
@@ -51,17 +46,89 @@
                 <span class="sender-name">{{ message.senderName }}</span>
                 <span class="message-time">{{ formatMessageTime(message.createTime) }}</span>
               </div>
-              <div class="message-content">{{ message.content }}</div>
+              <div class="message-content">
+                <template v-if="message.type === 'TEXT'">
+                  {{ message.content }}
+                </template>
+                <template v-else-if="message.type === 'FILE'">
+                  <div class="file-message" :class="getFileTypeClass(message.fileType || 'other')">
+                    <div class="file-icon" v-if="!isPreviewable(message.fileType || 'other')">
+                      <i :class="getFileIconClass(message.fileType || 'other')"></i>
+                    </div>
+                    <template v-else-if="message.fileType === 'image'">
+                      <img 
+                        :src="message.content" 
+                        class="preview-image" 
+                        @click="previewFile(message.content, message.fileType || 'other')"
+                      />
+                    </template>
+                    <template v-else-if="message.fileType === 'video'">
+                      <video 
+                        :src="message.content" 
+                        class="preview-video" 
+                        controls 
+                        @click="previewFile(message.content, message.fileType || 'other')"
+                      />
+                    </template>
+                    <template v-else-if="message.fileType === 'audio'">
+                      <audio 
+                        :src="message.content" 
+                        class="preview-audio" 
+                        controls
+                      />
+                    </template>
+                    <template v-else-if="message.fileType === 'pdf'">
+                      <a 
+                        :href="message.content" 
+                        target="_blank" 
+                        class="file-link"
+                      >
+                        <i class="el-icon-document"></i>
+                        <span>{{ getFileName(message.content) }}</span>
+                      </a>
+                    </template>
+                    <template v-else-if="message.fileType === 'markdown'">
+                      <a 
+                        :href="message.content" 
+                        target="_blank" 
+                        class="file-link"
+                      >
+                        <i class="el-icon-document"></i>
+                        <span>{{ getFileName(message.content) }}</span>
+                      </a>
+                    </template>
+                    <a 
+                      :href="message.content" 
+                      download 
+                      class="download-link"
+                    >
+                      <i class="el-icon-download"></i>
+                    </a>
+                  </div>
+                </template>
+              </div>
             </div>
           </template>
-        </div>
-
-        <div v-if="!chatStore.hasMore && chatStore.messages.length > 0" class="no-more-message">
-          没有更多消息了
         </div>
       </div>
 
       <div class="input-area">
+        <div class="input-tools">
+          <el-button 
+            type="text" 
+            @click="triggerFileInput"
+            :disabled="!chatStore.isConnected"
+          >
+            <i class="el-icon-upload"></i>
+          </el-button>
+          <input 
+            ref="fileInput" 
+            type="file" 
+            multiple 
+            style="display: none" 
+            @change="handleFileSelect"
+          />
+        </div>
         <el-input
           v-model="inputMessage"
           placeholder="输入消息..."
@@ -72,12 +139,26 @@
             <el-button 
               type="primary" 
               @click="sendMessage"
-              :disabled="!chatStore.isConnected || !inputMessage.trim()"
+              :disabled="!chatStore.isConnected || (!inputMessage.trim() && !uploadingFiles.length)"
             >
               发送
             </el-button>
           </template>
         </el-input>
+        <div class="uploading-files" v-if="uploadingFiles.length > 0">
+          <div 
+            v-for="(file, index) in uploadingFiles" 
+            :key="index"
+            class="uploading-file-item"
+          >
+            <span class="file-name">{{ file.name }}</span>
+            <el-progress 
+              :percentage="file.progress" 
+              :stroke-width="6" 
+              :show-text="false"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </el-dialog>
@@ -85,14 +166,16 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted, watch, nextTick } from 'vue'
-import { Loading } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { formatMessageTime } from '@/utils/format'
+import { uploadFile } from '@/api/file'
 
 const visible = ref(false)
 const inputMessage = ref('')
 const messagesContainer = ref<HTMLElement>()
+const fileInput = ref<HTMLInputElement>()
+const uploadingFiles = ref<Array<{ name: string; progress: number }>>([])
 
 const userStore = useUserStore()
 const chatStore = useChatStore()
@@ -110,25 +193,122 @@ function closeChat() {
 
 function sendMessage() {
   const content = inputMessage.value.trim()
-  if (!content || !chatStore.isConnected) return
+  if (!content && uploadingFiles.value.length === 0) return
+  if (!chatStore.isConnected) return
 
-  chatStore.sendMessage({
-    content,
-    type: 'TEXT',
-    parentId: 0
-  })
+  if (content) {
+    chatStore.sendMessage({
+      content,
+      type: 'TEXT',
+      parentId: 0
+    })
+    inputMessage.value = ''
+  }
 
-  inputMessage.value = ''
   scrollToBottom()
+}
+
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
+async function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (!files || files.length === 0) return
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    uploadingFiles.value.push({ name: file.name, progress: 0 })
+    
+    try {
+      const response = await uploadFile(file, 'chat')
+      const apiResponse = response as any
+      if (apiResponse.code === 200) {
+        const fileUrl = apiResponse.message
+        const fileType = getFileType(file.name)
+        
+        chatStore.sendMessage({
+          content: fileUrl,
+          type: 'FILE',
+          fileType,
+          parentId: 0
+        })
+      }
+    } catch (error) {
+      console.error('File upload failed:', error)
+    } finally {
+      const index = uploadingFiles.value.findIndex(item => item.name === file.name)
+      if (index !== -1) {
+        uploadingFiles.value.splice(index, 1)
+      }
+    }
+  }
+
+  target.value = ''
+  scrollToBottom()
+}
+
+function getFileType(filename: string): string {
+  const extension = filename.split('.').pop()?.toLowerCase()
+  
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) {
+    return 'image'
+  } else if (['mp4', 'webm', 'ogg', 'mov'].includes(extension || '')) {
+    return 'video'
+  } else if (['mp3', 'wav', 'ogg', 'flac'].includes(extension || '')) {
+    return 'audio'
+  } else if (extension === 'pdf') {
+    return 'pdf'
+  } else if (['md', 'markdown'].includes(extension || '')) {
+    return 'markdown'
+  } else {
+    return 'other'
+  }
+}
+
+function isPreviewable(fileType: string): boolean {
+  return ['image', 'video', 'audio', 'pdf', 'markdown'].includes(fileType)
+}
+
+function getFileTypeClass(fileType: string): string {
+  return `file-type-${fileType}`
+}
+
+function getFileIconClass(fileType: string): string {
+  switch (fileType) {
+    case 'image':
+      return 'el-icon-picture'
+    case 'video':
+      return 'el-icon-video-camera'
+    case 'audio':
+      return 'el-icon-microphone'
+    case 'pdf':
+      return 'el-icon-document'
+    case 'markdown':
+      return 'el-icon-document'
+    default:
+      return 'el-icon-document'
+  }
+}
+
+function getFileName(url: string): string {
+  return url.split('/').pop() || ''
+}
+
+function previewFile(url: string, fileType: string) {
+  if (fileType === 'image' || fileType === 'video') {
+    window.open(url, '_blank')
+  } else if (fileType === 'pdf' || fileType === 'markdown') {
+    window.open(url, '_blank')
+  }
 }
 
 function handleScroll() {
   const container = messagesContainer.value
   if (!container) return
 
-  if (container.scrollTop === 0 && chatStore.hasMore && !chatStore.isLoading) {
-    chatStore.loadMoreMessages()
-  }
+  // 移除对不存在的属性和方法的引用
 }
 
 function scrollToBottom() {
@@ -299,5 +479,109 @@ defineExpose({
 .input-area {
   margin-top: 10px;
   padding: 0 10px;
+}
+
+.input-tools {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.uploading-files {
+  margin-top: 8px;
+}
+
+.uploading-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.file-icon {
+  font-size: 24px;
+  color: var(--color-muted);
+}
+
+.preview-image {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.preview-image:hover {
+  transform: scale(1.05);
+}
+
+.preview-video {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.preview-audio {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.file-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.file-link:hover {
+  text-decoration: underline;
+}
+
+.download-link {
+  color: var(--color-muted);
+  font-size: 14px;
+  margin-left: auto;
+}
+
+.download-link:hover {
+  color: var(--color-primary);
+}
+
+.file-type-other {
+  background: var(--color-bg);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-type-image, .file-type-video, .file-type-audio, .file-type-pdf, .file-type-markdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 </style>
